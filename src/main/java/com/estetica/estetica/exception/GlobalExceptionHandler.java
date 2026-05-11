@@ -1,5 +1,7 @@
 package com.estetica.estetica.exception;
 
+import com.estetica.estetica.dto.response.ErrorResponse;
+import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,166 +11,102 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Manejador global de excepciones para toda la API REST.
- *
- * <p>{@code @RestControllerAdvice} intercepta las excepciones lanzadas por cualquier controller
- * y las traduce a respuestas HTTP con el código de status y formato adecuado.
- * Sin este handler, las excepciones no capturadas devuelven un {@code 500 Internal Server Error}
- * genérico con información interna del servidor (stack trace), lo cual es inseguro e inútil para el cliente.</p>
- *
- * <h3>Excepciones manejadas:</h3>
- * <table>
- *     <tr><th>Excepción</th><th>Status HTTP</th><th>Cuándo ocurre</th></tr>
- *     <tr><td>{@code EntityNotFoundException}</td><td>404 Not Found</td><td>Buscar/actualizar/eliminar con un ID inexistente</td></tr>
- *     <tr><td>{@code IllegalArgumentException}</td><td>400 Bad Request</td><td>Email duplicado u otras reglas de negocio</td></tr>
- *     <tr><td>{@code MethodArgumentNotValidException}</td><td>400 Bad Request</td><td>Falla de validación en {@code @Valid} (campos vacíos, formato inválido, etc.)</td></tr>
- *     <tr><td>{@code MethodArgumentTypeMismatchException}</td><td>400 Bad Request</td><td>Parámetro con formato inválido en la URL (ej: UUID mal formado)</td></tr>
- *     <tr><td>{@code Exception} (genérica)</td><td>500 Internal Server Error</td><td>Cualquier error inesperado no capturado por los handlers anteriores</td></tr>
- * </table>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-14
- * @see com.estetica.estetica.controller.ProfesionalController
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Captura {@link EntityNotFoundException} y devuelve un {@code 404 Not Found}.
-     *
-     * <p>Se lanza cuando se intenta acceder a una profesional con un UUID que no existe en la base de datos.</p>
-     *
-     * @param ex la excepción capturada con el mensaje de error
-     * @return respuesta HTTP 404 con timestamp, status, tipo de error y mensaje descriptivo
-     */
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 404);
-        body.put("error", "No encontrado");
-        body.put("mensaje", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException ex) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(404)
+                .error("No encontrado")
+                .mensaje(ex.getMessage())
+                .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    /**
-     * Captura {@link IllegalArgumentException} y devuelve un {@code 400 Bad Request}.
-     *
-     * <p>Se lanza cuando se viola una regla de negocio, como intentar registrar
-     * una profesional con un email que ya existe.</p>
-     *
-     * @param ex la excepción capturada con el mensaje de error
-     * @return respuesta HTTP 400 con timestamp, status, tipo de error y mensaje descriptivo
-     */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 400);
-        body.put("error", "Solicitud inválida");
-        body.put("mensaje", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(400)
+                .error("Solicitud inválida")
+                .mensaje(ex.getMessage())
+                .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    /**
-     * Captura {@link MethodArgumentNotValidException} y devuelve un {@code 400 Bad Request}
-     * con el detalle de cada campo que falló la validación.
-     *
-     * <p>Se lanza automáticamente por Spring cuando un request body anotado con {@code @Valid}
-     * no cumple las restricciones definidas en el DTO ({@code @NotBlank}, {@code @Email}, {@code @Size}, etc.).</p>
-     *
-     * <p>El response incluye un mapa {@code "mensajes"} donde la clave es el nombre del campo
-     * y el valor es el mensaje de error definido en la anotación de validación.</p>
-     *
-     * @param ex la excepción capturada que contiene los errores de validación
-     * @return respuesta HTTP 400 con timestamp, status, tipo de error y mapa de errores por campo
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ValidationErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errores = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(fieldError ->
                 errores.put(fieldError.getField(), fieldError.getDefaultMessage())
         );
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 400);
-        body.put("error", "Error de validación");
-        body.put("mensajes", errores);
+        ValidationErrorResponse body = ValidationErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(400)
+                .error("Error de validación")
+                .mensajes(errores)
+                .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    /**
-     * Captura {@link ResourceAlreadyExistsException} y devuelve un {@code 409 Conflict}.
-     *
-     * <p>Se lanza cuando se intenta crear un recurso que ya existe y por reglas
-     * de negocio no puede duplicarse (por ejemplo, una ficha clínica facial para
-     * un paciente que ya tiene una).</p>
-     *
-     * @param ex la excepción capturada con el mensaje de error
-     * @return respuesta HTTP 409 con timestamp, status, tipo de error y mensaje descriptivo
-     */
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 409);
-        body.put("error", "Conflicto");
-        body.put("mensaje", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(409)
+                .error("Conflicto")
+                .mensaje(ex.getMessage())
+                .build();
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-    /**
-     * Captura {@link MethodArgumentTypeMismatchException} y devuelve un {@code 400 Bad Request}.
-     *
-     * <p>Se lanza cuando un parámetro de la URL no puede convertirse al tipo esperado.
-     * El caso más común es cuando se pasa un valor que no tiene formato UUID válido
-     * en un {@code @PathVariable UUID id} (ej: {@code GET /api/servicios/abc123}).</p>
-     *
-     * @param ex la excepción capturada con el detalle del parámetro inválido
-     * @return respuesta HTTP 400 con timestamp, status, tipo de error y mensaje descriptivo
-     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        String mensaje = String.format("El parámetro '%s' con valor '%s' no tiene un formato válido. Se esperaba tipo %s.",
-                ex.getName(), ex.getValue(),
-                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "desconocido");
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String mensaje;
+        Class<?> requiredType = ex.getRequiredType();
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 400);
-        body.put("error", "Parámetro inválido");
-        body.put("mensaje", mensaje);
+        if (requiredType != null && requiredType.isEnum()) {
+            String valoresValidos = Arrays.stream(requiredType.getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+            mensaje = String.format("El parámetro '%s' con valor '%s' es inválido. Valores válidos: %s.",
+                    ex.getName(), ex.getValue(), valoresValidos);
+        } else {
+            mensaje = String.format("El parámetro '%s' con valor '%s' no tiene un formato válido. Se esperaba tipo %s.",
+                    ex.getName(), ex.getValue(),
+                    requiredType != null ? requiredType.getSimpleName() : "desconocido");
+        }
+
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(400)
+                .error("Parámetro inválido")
+                .mensaje(mensaje)
+                .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    /**
-     * Handler genérico de último recurso para cualquier excepción no capturada.
-     *
-     * <p>Si ninguno de los handlers anteriores captura la excepción, este método
-     * la intercepta y devuelve un {@code 500 Internal Server Error} con un mensaje
-     * genérico (sin exponer detalles internos del servidor por seguridad).</p>
-     *
-     * @param ex la excepción no capturada
-     * @return respuesta HTTP 500 con timestamp, status, tipo de error y mensaje genérico
-     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 500);
-        body.put("error", "Error interno del servidor");
-        body.put("mensaje", "Ocurrió un error inesperado. Contacte al administrador.");
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(500)
+                .error("Error interno del servidor")
+                .mensaje("Ocurrió un error inesperado. Contacte al administrador.")
+                .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }

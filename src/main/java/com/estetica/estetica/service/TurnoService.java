@@ -16,34 +16,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Servicio que contiene la lógica de negocio de {@link Turno}.
- *
- * <p>Responsabilidades:</p>
- * <ul>
- *     <li>Crear turnos validando que profesional, paciente y servicios existan y estén
- *         bajo la misma profesional (aislamiento multi-tenant).</li>
- *     <li>Congelar el precio de cada servicio en la entidad intermedia {@link TurnoServicio}.</li>
- *     <li>Calcular el {@code montoTotal} sumando los precios congelados.</li>
- *     <li>Gestionar transiciones de estado según la máquina de estados definida.</li>
- *     <li>Listar turnos por profesional, paciente, estado y rango de fechas.</li>
- * </ul>
- *
- * <h3>Transiciones de estado permitidas:</h3>
- * <ul>
- *     <li>{@code PENDIENTE → CONFIRMADO | CANCELADO}</li>
- *     <li>{@code CONFIRMADO → REALIZADO | CANCELADO}</li>
- *     <li>{@code REALIZADO}, {@code CANCELADO}: finales, no se pueden cambiar.</li>
- * </ul>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-24
- */
 @Service
 @RequiredArgsConstructor
 public class TurnoService {
@@ -53,27 +30,6 @@ public class TurnoService {
     private final PacienteRepository pacienteRepository;
     private final ServicioRepository servicioRepository;
 
-    // ============================================================
-    // CREAR
-    // ============================================================
-
-    /**
-     * Crea un nuevo turno vinculado a una profesional y un paciente con uno o más servicios.
-     *
-     * <p>Validaciones:</p>
-     * <ul>
-     *     <li>La profesional debe existir.</li>
-     *     <li>El paciente debe existir y pertenecer a esa profesional.</li>
-     *     <li>Todos los servicios deben existir, pertenecer a esa profesional y estar activos.</li>
-     *     <li>La fecha no puede ser en el pasado (reforzado por {@code @Future} del DTO).</li>
-     *     <li>TODO: validar que la fecha no caiga en un rango bloqueado de agenda
-     *         (pendiente de implementar la entidad BloqueoAgenda).</li>
-     * </ul>
-     *
-     * @param profesionalId UUID de la profesional dueña del turno
-     * @param request       datos del turno a crear
-     * @return {@link TurnoResponse} del turno creado con sus servicios y monto total
-     */
     @Transactional
     public TurnoResponse crear(UUID profesionalId, TurnoRequest request) {
         // 1. Validar profesional
@@ -96,11 +52,20 @@ public class TurnoService {
             throw new IllegalArgumentException("La fecha del turno no puede ser en el pasado");
         }
 
-        // 4. Validar servicios: existencia, pertenencia y que estén activos
+        // 4. Validar servicios: no nulos, no duplicados, existencia, pertenencia y que estén activos
         List<UUID> servicioIds = request.getServicioIds();
-        List<Servicio> servicios = servicioRepository.findAllById(servicioIds);
+        if (servicioIds.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalArgumentException("La lista de servicios no puede contener IDs nulos");
+        }
 
-        if (servicios.size() != Set.copyOf(servicioIds).size()) {
+        Set<UUID> servicioIdsUnicos = Set.copyOf(servicioIds);
+        if (servicioIdsUnicos.size() != servicioIds.size()) {
+            throw new IllegalArgumentException("La lista de servicios no puede contener IDs duplicados");
+        }
+
+        List<Servicio> servicios = servicioRepository.findAllById(servicioIdsUnicos);
+
+        if (servicios.size() != servicioIdsUnicos.size()) {
             throw new EntityNotFoundException(
                     "Uno o más servicios no existen. IDs solicitados: " + servicioIds);
         }
@@ -124,7 +89,7 @@ public class TurnoService {
                 .profesional(profesional)
                 .paciente(paciente)
                 .fechaHora(request.getFechaHora())
-                .estado(Turno.ESTADO_PENDIENTE)
+                .estado(EstadoTurno.PENDIENTE)
                 .observaciones(request.getObservaciones())
                 .montoTotal(BigDecimal.ZERO)
                 .turnoServicios(new ArrayList<>())
@@ -147,10 +112,6 @@ public class TurnoService {
         return toResponse(guardado);
     }
 
-    // ============================================================
-    // BUSCAR / LISTAR
-    // ============================================================
-
     @Transactional(readOnly = true)
     public TurnoResponse buscarPorId(UUID id) {
         Turno turno = turnoRepository.findById(id)
@@ -167,9 +128,11 @@ public class TurnoService {
     }
 
     @Transactional(readOnly = true)
-    public List<TurnoResponse> listarPorProfesionalYEstado(UUID profesionalId, String estado) {
+    public List<TurnoResponse> listarPorProfesionalYEstado(UUID profesionalId, EstadoTurno estado) {
         validarProfesionalExiste(profesionalId);
-        validarEstadoConocido(estado);
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado es obligatorio");
+        }
         return turnoRepository.findByProfesionalIdAndEstado(profesionalId, estado)
                 .stream().map(this::toResponse).toList();
     }
@@ -196,26 +159,16 @@ public class TurnoService {
                 .stream().map(this::toResponse).toList();
     }
 
-    // ============================================================
-    // CAMBIO DE ESTADO
-    // ============================================================
-
-    /**
-     * Cambia el estado del turno validando la transición contra la máquina de estados.
-     *
-     * @param id          UUID del turno
-     * @param nuevoEstado estado destino (PENDIENTE, CONFIRMADO, REALIZADO, CANCELADO)
-     * @return {@link TurnoResponse} con el turno actualizado
-     * @throws IllegalArgumentException si la transición no está permitida
-     */
     @Transactional
-    public TurnoResponse cambiarEstado(UUID id, String nuevoEstado) {
-        validarEstadoConocido(nuevoEstado);
+    public TurnoResponse cambiarEstado(UUID id, EstadoTurno nuevoEstado) {
+        if (nuevoEstado == null) {
+            throw new IllegalArgumentException("El nuevo estado es obligatorio");
+        }
         Turno turno = turnoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró el turno con ID: " + id));
 
-        String actual = turno.getEstado();
+        EstadoTurno actual = turno.getEstado();
         if (!esTransicionValida(actual, nuevoEstado)) {
             throw new IllegalArgumentException(
                     "Transición de estado inválida: " + actual + " → " + nuevoEstado);
@@ -226,42 +179,24 @@ public class TurnoService {
         return toResponse(actualizado);
     }
 
-    private boolean esTransicionValida(String actual, String nuevo) {
+    private boolean esTransicionValida(EstadoTurno actual, EstadoTurno nuevo) {
         if (actual.equals(nuevo)) {
             return false;
         }
         return switch (actual) {
-            case Turno.ESTADO_PENDIENTE ->
-                    nuevo.equals(Turno.ESTADO_CONFIRMADO) || nuevo.equals(Turno.ESTADO_CANCELADO);
-            case Turno.ESTADO_CONFIRMADO ->
-                    nuevo.equals(Turno.ESTADO_REALIZADO) || nuevo.equals(Turno.ESTADO_CANCELADO);
+            case PENDIENTE -> nuevo.equals(EstadoTurno.CONFIRMADO) || nuevo.equals(EstadoTurno.CANCELADO);
+            case CONFIRMADO -> nuevo.equals(EstadoTurno.REALIZADO) || nuevo.equals(EstadoTurno.CANCELADO);
             // REALIZADO y CANCELADO son estados finales
             default -> false;
         };
     }
 
-    private void validarEstadoConocido(String estado) {
-        if (estado == null) {
-            throw new IllegalArgumentException("El estado es obligatorio");
-        }
-        if (!estado.equals(Turno.ESTADO_PENDIENTE)
-                && !estado.equals(Turno.ESTADO_CONFIRMADO)
-                && !estado.equals(Turno.ESTADO_REALIZADO)
-                && !estado.equals(Turno.ESTADO_CANCELADO)) {
-            throw new IllegalArgumentException(
-                    "Estado inválido: " + estado + ". Valores válidos: PENDIENTE, CONFIRMADO, REALIZADO, CANCELADO");
-        }
-    }
 
     private void validarProfesionalExiste(UUID profesionalId) {
         if (!profesionalRepository.existsById(profesionalId)) {
             throw new EntityNotFoundException("No se encontró la profesional con ID: " + profesionalId);
         }
     }
-
-    // ============================================================
-    // MAPEO
-    // ============================================================
 
     private TurnoResponse toResponse(Turno turno) {
         List<TurnoResponse.TurnoServicioResponse> servicios = turno.getTurnoServicios()
@@ -287,4 +222,3 @@ public class TurnoService {
                 .build();
     }
 }
-

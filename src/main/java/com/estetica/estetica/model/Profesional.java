@@ -1,5 +1,6 @@
 package com.estetica.estetica.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,29 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 
-/**
- * Entidad JPA que representa a una profesional del centro de estética médica.
- *
- * <p>Se mapea a la tabla {@code profesionales} en PostgreSQL. Hibernate crea y actualiza
- * la tabla automáticamente gracias a la propiedad {@code spring.jpa.hibernate.ddl-auto=update}.</p>
- *
- * <h3>Anotaciones de Lombok utilizadas:</h3>
- * <ul>
- *     <li>{@code @Getter / @Setter} — Genera automáticamente los getters y setters de todos los campos.</li>
- *     <li>{@code @NoArgsConstructor} — Constructor vacío requerido por JPA.</li>
- *     <li>{@code @AllArgsConstructor} — Constructor con todos los campos, utilizado internamente por el Builder.</li>
- *     <li>{@code @Builder} — Permite construir instancias con el patrón Builder: {@code Profesional.builder().nombre("Ana").build()}.</li>
- * </ul>
- *
- * <h3>Campos de auditoría:</h3>
- * <p>{@code creadoEn} y {@code actualizadoEn} se llenan automáticamente mediante
- * los callbacks de JPA {@code @PrePersist} y {@code @PreUpdate}.</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-14
- * @see com.estetica.estetica.repository.ProfesionalRepository
- */
 @Entity
 @Table(name = "profesionales")
 @Getter
@@ -42,103 +20,69 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "Profesional", description = "Entidad JPA que representa a una profesional del sistema. Cada profesional funciona como tenant aislado y administra sus propios pacientes, servicios y turnos.")
 public class Profesional {
 
-    /**
-     * Identificador único de la profesional.
-     *
-     * <p>Se genera automáticamente como UUID v4 al persistir la entidad.
-     * Se usa UUID en lugar de Long autoincremental por seguridad: los IDs
-     * secuenciales son predecibles y vulnerables a ataques de enumeración (IDOR).</p>
-     */
+    @Schema(description = "Identificador único UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    /** Nombre de la profesional. Campo obligatorio, máximo 100 caracteres. */
+    @Schema(description = "Nombre de la profesional", example = "María")
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
     @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
-    /** Apellido de la profesional. Campo obligatorio, máximo 100 caracteres. */
+    @Schema(description = "Apellido de la profesional", example = "González")
     @NotBlank(message = "El apellido es obligatorio")
     @Size(max = 100, message = "El apellido no puede superar los 100 caracteres")
     @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
 
-    /**
-     * Email de la profesional. Identificador natural y futuro login.
-     *
-     * <p>Es obligatorio, debe tener formato de email válido y es único
-     * en la base de datos (no puede haber dos profesionales con el mismo email).</p>
-     */
+    @Schema(description = "Email único de la profesional. En el futuro puede funcionar como identificador de login", example = "maria.gonzalez@email.com")
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe tener un formato válido")
     @Size(max = 150, message = "El email no puede superar los 150 caracteres")
     @Column(name = "email", nullable = false, unique = true, length = 150)
     private String email;
 
-    /** Teléfono de contacto de la profesional. Campo obligatorio, máximo 20 caracteres. */
+    @Schema(description = "Teléfono de contacto de la profesional", example = "1123456789")
     @NotBlank(message = "El teléfono es obligatorio")
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
     @Column(name = "telefono", nullable = false, length = 20)
     private String telefono;
 
-    /** Especialidad médica de la profesional (ej: "Dermatología"). Campo opcional, máximo 100 caracteres. */
+    @Schema(description = "Especialidad principal de la profesional", example = "Cosmetología")
     @Size(max = 100, message = "La especialidad no puede superar los 100 caracteres")
     @Column(name = "especialidad", length = 100)
     private String especialidad;
 
-    /**
-     * Lista de servicios ofrecidos por esta profesional.
-     *
-     * <p>Relación {@code OneToMany} bidireccional mapeada por el campo {@code profesional} de la entidad
-     * {@link Servicio}. {@code cascade = ALL} propaga todas las operaciones (persist, merge, remove)
-     * a los servicios asociados. {@code orphanRemoval = true} elimina automáticamente los servicios
-     * que se desvinculen de la profesional.</p>
-     */
+    @Schema(description = "Servicios creados por la profesional")
     @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Servicio> servicios = new ArrayList<>();
 
-    /**
-     * Lista de pacientes atendidos por esta profesional.
-     *
-     * <p>Relación {@code OneToMany} bidireccional mapeada por el campo {@code profesional} de la entidad
-     * {@link Paciente}. {@code cascade = ALL} propaga todas las operaciones (persist, merge, remove)
-     * a los pacientes asociados. {@code orphanRemoval = true} elimina automáticamente los pacientes
-     * que se desvinculen de la profesional.</p>
-     */
+    @Schema(description = "Pacientes pertenecientes a la profesional")
     @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Paciente> pacientes = new ArrayList<>();
 
-    /** Fecha y hora en que se creó el registro. Se setea automáticamente y no se puede modificar. */
+    @Schema(description = "Fecha y hora en la que se creó el registro", example = "2026-05-07T18:30:00")
     @Column(name = "creado_en", updatable = false)
     private LocalDateTime creadoEn;
 
-    /** Fecha y hora de la última modificación del registro. Se actualiza automáticamente en cada cambio. */
+    @Schema(description = "Fecha y hora de la última modificación del registro", example = "2026-05-07T19:15:00")
     @Column(name = "actualizado_en")
     private LocalDateTime actualizadoEn;
 
-    /**
-     * Callback de JPA que se ejecuta automáticamente <b>antes de insertar</b> la entidad en la base de datos.
-     *
-     * <p>Setea {@code creadoEn} y {@code actualizadoEn} con la fecha y hora actual.</p>
-     */
     @PrePersist
     protected void onCreate() {
         this.creadoEn = LocalDateTime.now();
         this.actualizadoEn = LocalDateTime.now();
     }
 
-    /**
-     * Callback de JPA que se ejecuta automáticamente <b>antes de actualizar</b> la entidad en la base de datos.
-     *
-     * <p>Actualiza solo {@code actualizadoEn} con la fecha y hora actual.</p>
-     */
     @PreUpdate
     protected void onUpdate() {
         this.actualizadoEn = LocalDateTime.now();

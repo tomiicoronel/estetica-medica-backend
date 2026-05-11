@@ -1,100 +1,86 @@
 package com.estetica.estetica.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * DTO de entrada para crear o actualizar un paciente.
- *
- * <p>Contiene los datos que el cliente envía en el body de las peticiones POST y PUT.
- * No incluye {@code id}, {@code activo} ni fechas de auditoría (los maneja el sistema).</p>
- *
- * <p>Campos obligatorios: nombre, apellido, dniCuit, telefono, profesionalId.
- * El resto son opcionales y se pueden completar después con un PUT.</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-20
- * @see com.estetica.estetica.dto.response.PacienteResponse
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "PacienteRequest", description = "Datos para crear o actualizar un paciente. Nombre, apellido, DNI/CUIT y teléfono son obligatorios.")
 public class PacienteRequest {
 
-    /** UUID de la profesional a la que pertenece el paciente. Obligatorio. */
+    @Schema(description = "UUID de la profesional dueña del paciente. Normalmente se completa desde el path.", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID profesionalId;
 
-    /** Nombre del paciente. Obligatorio, máximo 100 caracteres. */
+    @Schema(description = "Nombre del paciente", example = "Ana", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
     private String nombre;
 
-    /** Apellido del paciente. Obligatorio, máximo 100 caracteres. */
+    @Schema(description = "Apellido del paciente", example = "Pérez", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El apellido es obligatorio")
     @Size(max = 100, message = "El apellido no puede superar los 100 caracteres")
     private String apellido;
 
-    /** DNI o CUIT del paciente. Obligatorio, máximo 20 caracteres. */
+    @Schema(description = "DNI o CUIT. No puede repetirse dentro de la misma profesional.", example = "30111222", maxLength = 20, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El DNI/CUIT es obligatorio")
     @Size(max = 20, message = "El DNI/CUIT no puede superar los 20 caracteres")
     private String dniCuit;
 
-    /** Fecha de nacimiento del paciente. Opcional. */
+    @Schema(description = "Fecha de nacimiento", example = "1990-05-20")
     private LocalDate fechaNacimiento;
 
-    /** Teléfono de contacto. Obligatorio, máximo 20 caracteres. */
+    @Schema(description = "Teléfono de contacto", example = "1122334455", maxLength = 20, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El teléfono es obligatorio")
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
     private String telefono;
 
-    /** Email del paciente. Opcional, pero si se envía debe tener formato válido. */
+    @Schema(description = "Email del paciente. Opcional, pero si se envía debe ser válido.", example = "ana@email.com", maxLength = 150)
     @Email(message = "El email debe tener un formato válido")
     @Size(max = 150, message = "El email no puede superar los 150 caracteres")
     private String email;
 
-    /** Profesión u ocupación. Opcional, máximo 100 caracteres. */
+    @Schema(description = "Profesión u ocupación", example = "Docente", maxLength = 100)
     @Size(max = 100, message = "La profesión no puede superar los 100 caracteres")
     private String profesion;
 
-    /** Domicilio. Opcional, máximo 255 caracteres. */
+    @Schema(description = "Domicilio", example = "Av. Siempre Viva 742", maxLength = 255)
     @Size(max = 255, message = "El domicilio no puede superar los 255 caracteres")
     private String domicilio;
 
-    /** Obra social. Opcional, máximo 100 caracteres. */
+    @Schema(description = "Obra social", example = "OSDE", maxLength = 100)
     @Size(max = 100, message = "La obra social no puede superar los 100 caracteres")
     private String obraSocial;
 
-    /** Número de afiliado de la obra social. Opcional, máximo 50 caracteres. */
+    @Schema(description = "Número de afiliado de obra social", example = "123456789", maxLength = 50)
     @Size(max = 50, message = "El número de obra social no puede superar los 50 caracteres")
     private String numeroObraSocial;
 
-    /** Nombre del contacto de emergencia. Opcional, máximo 100 caracteres. */
+    @Schema(description = "Nombre del contacto de emergencia", example = "Laura Pérez", maxLength = 100)
     @Size(max = 100, message = "El nombre del contacto de emergencia no puede superar los 100 caracteres")
     private String contactoEmergenciaNombre;
 
-    /** Teléfono del contacto de emergencia. Opcional, máximo 20 caracteres. */
+    @Schema(description = "Teléfono del contacto de emergencia", example = "1199887766", maxLength = 20)
     @Size(max = 20, message = "El teléfono del contacto de emergencia no puede superar los 20 caracteres")
     private String contactoEmergenciaTelefono;
 
-    /** Parentesco del contacto de emergencia. Opcional, máximo 50 caracteres. */
+    @Schema(description = "Parentesco del contacto de emergencia", example = "Hermana", maxLength = 50)
     @Size(max = 50, message = "El parentesco no puede superar los 50 caracteres")
     private String contactoEmergenciaParentesco;
 
-    /** Primera entidad de traslado. Opcional, máximo 100 caracteres. */
+    @Schema(description = "Primera entidad de traslado", example = "Hospital Italiano", maxLength = 100)
     @Size(max = 100, message = "La entidad de traslado no puede superar los 100 caracteres")
     private String entidadTraslado1;
 
-    /** Segunda entidad de traslado. Opcional, máximo 100 caracteres. */
+    @Schema(description = "Segunda entidad de traslado", example = "Sanatorio Güemes", maxLength = 100)
     @Size(max = 100, message = "La entidad de traslado no puede superar los 100 caracteres")
     private String entidadTraslado2;
 }
-

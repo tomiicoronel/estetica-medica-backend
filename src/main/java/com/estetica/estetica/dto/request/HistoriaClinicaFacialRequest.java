@@ -1,101 +1,74 @@
 package com.estetica.estetica.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
-/**
- * DTO de entrada para crear o actualizar una {@code HistoriaClinicaFacial}.
- *
- * <p>Todos los campos son <b>opcionales</b>: la ficha se puede completar progresivamente
- * a medida que la profesional recopila la información del paciente. No se incluye
- * {@code id}, {@code pacienteId} ni fechas de auditoría (los maneja el sistema o se
- * envían por path variable).</p>
- *
- * <p>Las únicas validaciones presentes son rangos de los campos numéricos de clasificación
- * ({@code fototipoFitzpatrick} 1-6, {@code gradoGlogau} 1-4).</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-22
- * @see com.estetica.estetica.dto.response.HistoriaClinicaFacialResponse
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "HistoriaClinicaFacialRequest", description = "Datos clínicos faciales. Todos los campos son opcionales para permitir completado progresivo.")
 public class HistoriaClinicaFacialRequest {
 
-    // ---- Antecedentes patológicos ----
-    private Boolean hta;
-    private Boolean dbt;
-    private Boolean hipotiroidismo;
-    private Boolean hipertiroidismo;
-    private Boolean anemia;
-    private Boolean enfermedadesAutoinmunes;
-    private Boolean glaucoma;
-    private Boolean enfermedadNeuromuscular;
-    private Boolean trastornosCoagulacion;
-    private Boolean alteracionCicatrizacion;
-    private Boolean marcapasos;
-    private Boolean protesisMetalica;
-    private String otroAntecedentePatologico;
+    @Schema(description = "Antecedente patológico: hipertensión arterial") private Boolean hta;
+    @Schema(description = "Antecedente patológico: diabetes") private Boolean dbt;
+    @Schema(description = "Antecedente patológico: hipotiroidismo") private Boolean hipotiroidismo;
+    @Schema(description = "Antecedente patológico: hipertiroidismo") private Boolean hipertiroidismo;
+    @Schema(description = "Antecedente patológico: anemia") private Boolean anemia;
+    @Schema(description = "Antecedente patológico: enfermedades autoinmunes") private Boolean enfermedadesAutoinmunes;
+    @Schema(description = "Antecedente patológico: glaucoma") private Boolean glaucoma;
+    @Schema(description = "Antecedente patológico: enfermedad neuromuscular") private Boolean enfermedadNeuromuscular;
+    @Schema(description = "Antecedente patológico: trastornos de coagulación") private Boolean trastornosCoagulacion;
+    @Schema(description = "Antecedente patológico: alteración de cicatrización") private Boolean alteracionCicatrizacion;
+    @Schema(description = "Antecedente patológico: marcapasos") private Boolean marcapasos;
+    @Schema(description = "Antecedente patológico: prótesis metálica") private Boolean protesisMetalica;
+    @Schema(description = "Otros antecedentes patológicos", example = "Rosácea") private String otroAntecedentePatologico;
 
-    // ---- Antecedentes tóxicos ----
-    private Boolean tbq;
-    private Boolean alcohol;
-    private String otrasToxico;
+    @Schema(description = "Tabaquismo") private Boolean tbq;
+    @Schema(description = "Consumo de alcohol") private Boolean alcohol;
+    @Schema(description = "Otros antecedentes tóxicos") private String otrasToxico;
 
-    // ---- Antecedentes alérgicos ----
-    private Boolean alergicoHuevo;
-    private Boolean alergicoAnestesia;
-    private Boolean alergicoFish;
-    private String otrasAlergias;
+    @Schema(description = "Alergia al huevo") private Boolean alergicoHuevo;
+    @Schema(description = "Alergia a anestesia") private Boolean alergicoAnestesia;
+    @Schema(description = "Alergia a pescado") private Boolean alergicoFish;
+    @Schema(description = "Otras alergias") private String otrasAlergias;
 
-    // ---- Antecedentes quirúrgicos ----
-    private String antecedentesQuirurgicos;
+    @Schema(description = "Antecedentes quirúrgicos") private String antecedentesQuirurgicos;
+    @Schema(description = "Fecha de última menstruación o dato ginecológico textual") private String fum;
+    @Schema(description = "Embarazo actual") private Boolean embarazo;
 
-    // ---- Antecedentes ginecológicos ----
-    private String fum;
-    private Boolean embarazo;
+    @Schema(description = "Herpes labial") private Boolean herpesLabial;
+    @Schema(description = "Medicación habitual") private String medicacionHabitual;
+    @Schema(description = "Consumió aspirina en la última semana") private Boolean aspirinaSemana;
 
-    // ---- Otros antecedentes ----
-    private Boolean herpesLabial;
-    private String medicacionHabitual;
-    private Boolean aspirinaSemana;
+    @Schema(description = "Exposición solar frecuente") private Boolean exposicionSolar;
+    @Schema(description = "Usa protección solar") private Boolean usaProteccionSolar;
+    @Schema(description = "Tipo o marca de protección solar") private String proteccionSolarCual;
+    @Schema(description = "Veces por día que usa protección solar") private String proteccionSolarVecesDia;
+    @Schema(description = "Hábitos de higiene facial") private String habitosHigieneFacial;
+    @Schema(description = "Tratamiento domiciliario actual") private String tratamientoDomiciliario;
+    @Schema(description = "Tuvo tratamientos faciales previos") private Boolean tratamientosPrevios;
+    @Schema(description = "Detalle de tratamientos previos") private String tratamientosPreviosCuales;
+    @Schema(description = "Respuesta a tratamientos previos") private String tratamientosPreviosRespuesta;
+    @Schema(description = "Viaje programado en el próximo mes") private Boolean viajeProximoMes;
 
-    // ---- Hábitos ----
-    private Boolean exposicionSolar;
-    private Boolean usaProteccionSolar;
-    private String proteccionSolarCual;
-    private String proteccionSolarVecesDia;
-    private String habitosHigieneFacial;
-    private String tratamientoDomiciliario;
-    private Boolean tratamientosPrevios;
-    private String tratamientosPreviosCuales;
-    private String tratamientosPreviosRespuesta;
-    private Boolean viajeProximoMes;
+    @Schema(description = "Presencia de otros materiales") private String presenciaOtrosMateriales;
+    @Schema(description = "Secuelas de tratamientos previos") private String secuelasTratamientosPrevios;
+    @Schema(description = "Se toma fotografía clínica") private Boolean seTomaFotografia;
 
-    // ---- Examen ----
-    private String presenciaOtrosMateriales;
-    private String secuelasTratamientosPrevios;
-    private Boolean seTomaFotografia;
-
-    // ---- Clasificaciones ----
-
-    /** Fototipo de Fitzpatrick. Valores válidos: 1 a 6. */
+    @Schema(description = "Fototipo de Fitzpatrick", example = "3", minimum = "1", maximum = "6")
     @Min(value = 1, message = "El fototipo de Fitzpatrick debe estar entre 1 y 6")
     @Max(value = 6, message = "El fototipo de Fitzpatrick debe estar entre 1 y 6")
     private Integer fototipoFitzpatrick;
 
-    /** Grado de Glogau. Valores válidos: 1 a 4. */
+    @Schema(description = "Grado de Glogau", example = "2", minimum = "1", maximum = "4")
     @Min(value = 1, message = "El grado de Glogau debe estar entre 1 y 4")
     @Max(value = 4, message = "El grado de Glogau debe estar entre 1 y 4")
     private Integer gradoGlogau;
 
-    // ---- Tratamiento y seguimiento ----
-    private String diagnosticoYTratamiento;
-    private String observacionesPosteriores;
+    @Schema(description = "Diagnóstico y tratamiento indicado") private String diagnosticoYTratamiento;
+    @Schema(description = "Observaciones posteriores") private String observacionesPosteriores;
 }
-

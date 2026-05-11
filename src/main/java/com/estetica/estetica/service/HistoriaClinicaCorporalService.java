@@ -13,21 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-
-/**
- * Servicio con la lógica de negocio para gestionar la {@code HistoriaClinicaCorporal}.
- *
- * <p>Reglas principales:</p>
- * <ul>
- *     <li>La ficha se crea vinculada a un paciente existente.</li>
- *     <li>Un paciente puede tener, como máximo, <b>una</b> ficha corporal.</li>
- *     <li>Todos los campos clínicos son opcionales y pueden completarse progresivamente.</li>
- * </ul>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-22
- */
 @Service
 @RequiredArgsConstructor
 public class HistoriaClinicaCorporalService {
@@ -35,15 +20,6 @@ public class HistoriaClinicaCorporalService {
     private final HistoriaClinicaCorporalRepository historiaRepository;
     private final PacienteRepository pacienteRepository;
 
-    /**
-     * Crea una nueva ficha clínica corporal para un paciente.
-     *
-     * @param pacienteId UUID del paciente dueño de la ficha
-     * @param request    datos clínicos a cargar
-     * @return {@link HistoriaClinicaCorporalResponse} con la ficha creada
-     * @throws EntityNotFoundException        si el paciente no existe
-     * @throws ResourceAlreadyExistsException si el paciente ya tiene una ficha corporal
-     */
     @Transactional
     public HistoriaClinicaCorporalResponse crearFicha(UUID pacienteId, HistoriaClinicaCorporalRequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
@@ -62,13 +38,6 @@ public class HistoriaClinicaCorporalService {
         return toResponse(guardada);
     }
 
-    /**
-     * Busca la ficha clínica corporal de un paciente.
-     *
-     * @param pacienteId UUID del paciente
-     * @return {@link HistoriaClinicaCorporalResponse} con la ficha
-     * @throws EntityNotFoundException si el paciente no existe o no tiene ficha cargada
-     */
     @Transactional(readOnly = true)
     public HistoriaClinicaCorporalResponse buscarPorPaciente(UUID pacienteId) {
         if (!pacienteRepository.existsById(pacienteId)) {
@@ -83,16 +52,6 @@ public class HistoriaClinicaCorporalService {
         return toResponse(ficha);
     }
 
-    /**
-     * Actualiza los campos de una ficha clínica corporal existente.
-     *
-     * <p>La ficha mantiene siempre al mismo paciente (no se permite reasignar).</p>
-     *
-     * @param id      UUID de la ficha a actualizar
-     * @param request nuevos datos clínicos (JSON completo desde el frontend)
-     * @return {@link HistoriaClinicaCorporalResponse} actualizada
-     * @throws EntityNotFoundException si la ficha no existe
-     */
     @Transactional
     public HistoriaClinicaCorporalResponse actualizarFicha(UUID id, HistoriaClinicaCorporalRequest request) {
         HistoriaClinicaCorporal ficha = historiaRepository.findById(id)
@@ -109,10 +68,6 @@ public class HistoriaClinicaCorporalService {
     // MÉTODOS PRIVADOS DE MAPEO
     // ============================================================
 
-    /**
-     * Vuelca los valores del {@link HistoriaClinicaCorporalRequest} sobre la entidad recibida
-     * (pisa todos los campos, incluso los nulos). Se usa al crear y al actualizar (PUT).
-     */
     private HistoriaClinicaCorporal toEntity(HistoriaClinicaCorporal ficha, HistoriaClinicaCorporalRequest r) {
         // Antecedentes patológicos
         ficha.setHta(r.getHta());
@@ -193,7 +148,6 @@ public class HistoriaClinicaCorporalService {
         return ficha;
     }
 
-    /** Convierte la entidad a DTO de respuesta. */
     private HistoriaClinicaCorporalResponse toResponse(HistoriaClinicaCorporal f) {
         return HistoriaClinicaCorporalResponse.builder()
                 .id(f.getId())

@@ -13,21 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-
-/**
- * Servicio con la lógica de negocio para gestionar la {@code HistoriaClinicaFacial}.
- *
- * <p>Reglas principales:
- * <ul>
- *     <li>La ficha se crea vinculada a un paciente existente.</li>
- *     <li>Un paciente puede tener, como máximo, <b>una</b> ficha facial.</li>
- *     <li>Todos los campos clínicos son opcionales y pueden completarse progresivamente.</li>
- * </ul>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-22
- */
 @Service
 @RequiredArgsConstructor
 public class HistoriaClinicaFacialService {
@@ -35,15 +20,6 @@ public class HistoriaClinicaFacialService {
     private final HistoriaClinicaFacialRepository historiaRepository;
     private final PacienteRepository pacienteRepository;
 
-    /**
-     * Crea una nueva ficha clínica facial para un paciente.
-     *
-     * @param pacienteId UUID del paciente dueño de la ficha
-     * @param request    datos clínicos a cargar
-     * @return {@link HistoriaClinicaFacialResponse} con la ficha creada
-     * @throws EntityNotFoundException         si el paciente no existe
-     * @throws ResourceAlreadyExistsException  si el paciente ya tiene una ficha facial
-     */
     @Transactional
     public HistoriaClinicaFacialResponse crearFicha(UUID pacienteId, HistoriaClinicaFacialRequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
@@ -62,13 +38,6 @@ public class HistoriaClinicaFacialService {
         return toResponse(guardada);
     }
 
-    /**
-     * Busca la ficha clínica facial de un paciente.
-     *
-     * @param pacienteId UUID del paciente
-     * @return {@link HistoriaClinicaFacialResponse} con la ficha
-     * @throws EntityNotFoundException si el paciente no existe o no tiene ficha cargada
-     */
     @Transactional(readOnly = true)
     public HistoriaClinicaFacialResponse buscarPorPaciente(UUID pacienteId) {
         if (!pacienteRepository.existsById(pacienteId)) {
@@ -83,16 +52,6 @@ public class HistoriaClinicaFacialService {
         return toResponse(ficha);
     }
 
-    /**
-     * Actualiza los campos de una ficha clínica facial existente.
-     *
-     * <p>La ficha mantiene siempre al mismo paciente (no se permite reasignar).</p>
-     *
-     * @param id      UUID de la ficha a actualizar
-     * @param request nuevos datos clínicos
-     * @return {@link HistoriaClinicaFacialResponse} actualizada
-     * @throws EntityNotFoundException si la ficha no existe
-     */
     @Transactional
     public HistoriaClinicaFacialResponse actualizarFicha(UUID id, HistoriaClinicaFacialRequest request) {
         HistoriaClinicaFacial ficha = historiaRepository.findById(id)
@@ -109,10 +68,6 @@ public class HistoriaClinicaFacialService {
     // MÉTODOS PRIVADOS DE MAPEO
     // ============================================================
 
-    /**
-     * Vuelca los valores del {@link HistoriaClinicaFacialRequest} sobre la entidad recibida.
-     * Se usa tanto al crear (entidad nueva) como al actualizar (entidad ya persistida).
-     */
     private HistoriaClinicaFacial toEntity(HistoriaClinicaFacial ficha, HistoriaClinicaFacialRequest r) {
         // Antecedentes patológicos
         ficha.setHta(r.getHta());
@@ -180,7 +135,6 @@ public class HistoriaClinicaFacialService {
         return ficha;
     }
 
-    /** Convierte la entidad a DTO de respuesta. */
     private HistoriaClinicaFacialResponse toResponse(HistoriaClinicaFacial f) {
         return HistoriaClinicaFacialResponse.builder()
                 .id(f.getId())

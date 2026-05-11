@@ -1,5 +1,6 @@
 package com.estetica.estetica.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,34 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Entidad JPA que representa un <b>turno</b> agendado por una profesional para un paciente.
- *
- * <p>Se mapea a la tabla {@code turnos} en PostgreSQL. Un turno pertenece a una
- * {@link Profesional} y a un {@link Paciente} (ambas relaciones {@code ManyToOne})
- * e incluye uno o más servicios a través de la entidad intermedia
- * {@link TurnoServicio}, que congela el precio de cada servicio al momento de crear el turno.</p>
- *
- * <h3>Estados posibles:</h3>
- * <ul>
- *     <li>{@code PENDIENTE} — valor por defecto al crear el turno.</li>
- *     <li>{@code CONFIRMADO} — la paciente confirmó asistencia.</li>
- *     <li>{@code REALIZADO} — estado final, la sesión se completó.</li>
- *     <li>{@code CANCELADO} — estado final, el turno no se realizará.</li>
- * </ul>
- *
- * <h3>Transiciones válidas:</h3>
- * <p>{@code PENDIENTE → CONFIRMADO | CANCELADO},
- * {@code CONFIRMADO → REALIZADO | CANCELADO}.
- * {@code REALIZADO} y {@code CANCELADO} son estados finales.</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-24
- * @see TurnoServicio
- * @see Profesional
- * @see Paciente
- */
 @Entity
 @Table(name = "turnos")
 @Getter
@@ -46,82 +19,55 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "Turno", description = "Entidad JPA que representa un turno agendado para un paciente con uno o más servicios.")
 public class Turno {
 
-    /** Estados posibles del turno. */
-    public static final String ESTADO_PENDIENTE = "PENDIENTE";
-    public static final String ESTADO_CONFIRMADO = "CONFIRMADO";
-    public static final String ESTADO_REALIZADO = "REALIZADO";
-    public static final String ESTADO_CANCELADO = "CANCELADO";
-
-    /** Identificador único del turno (UUID v4). */
+    @Schema(description = "Identificador único UUID del turno", example = "850e8400-e29b-41d4-a716-446655440000")
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    /**
-     * Profesional dueña del turno.
-     *
-     * <p>Relación {@code ManyToOne}: muchos turnos pertenecen a una misma profesional.
-     * {@code FetchType.LAZY} para evitar cargar la profesional en cada consulta.</p>
-     */
+    @Schema(description = "Profesional dueña del turno")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "profesional_id", nullable = false)
     private Profesional profesional;
 
-    /**
-     * Paciente al que se le asigna el turno.
-     *
-     * <p>Relación {@code ManyToOne}: muchos turnos pueden pertenecer a un mismo paciente.</p>
-     */
+    @Schema(description = "Paciente asignado al turno")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "paciente_id", nullable = false)
     private Paciente paciente;
 
-    /** Fecha y hora en que está agendado el turno. */
+    @Schema(description = "Fecha y hora del turno", example = "2026-05-10T15:30:00")
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
 
-    /**
-     * Estado actual del turno.
-     *
-     * <p>Por defecto {@code PENDIENTE} al crear. Ver transiciones permitidas arriba.</p>
-     */
+    @Schema(description = "Estado actual del turno", example = "PENDIENTE", allowableValues = {"PENDIENTE", "CONFIRMADO", "REALIZADO", "CANCELADO"})
     @Builder.Default
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
-    private String estado = ESTADO_PENDIENTE;
+    private EstadoTurno estado = EstadoTurno.PENDIENTE;
 
-    /**
-     * Monto total del turno.
-     *
-     * <p>Se calcula sumando los {@code precioMomento} de cada {@link TurnoServicio}
-     * asociado. Se guarda denormalizado en el turno para evitar recalcular en cada consulta.</p>
-     */
+    @Schema(description = "Monto total calculado sumando los precios congelados", example = "28000.00")
     @Column(name = "monto_total", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoTotal;
 
-    /** Notas u observaciones sobre el turno (opcional). */
+    @Schema(description = "Notas opcionales del turno")
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 
-    /**
-     * Servicios incluidos en el turno, con su precio congelado al momento de crear.
-     *
-     * <p>Relación {@code OneToMany} inversa: el dueño de la FK es {@link TurnoServicio}.
-     * {@code cascade = ALL} + {@code orphanRemoval = true} para que los TurnoServicio
-     * se persistan y eliminen junto con el turno.</p>
-     */
+    @Schema(description = "Servicios incluidos en el turno con precio congelado")
     @Builder.Default
     @OneToMany(mappedBy = "turno", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TurnoServicio> turnoServicios = new ArrayList<>();
 
+    @Schema(description = "Fecha y hora de creación")
     @CreationTimestamp
     @Column(name = "creado_en", updatable = false)
     private LocalDateTime creadoEn;
 
+    @Schema(description = "Fecha y hora de última actualización")
     @UpdateTimestamp
     @Column(name = "actualizado_en")
     private LocalDateTime actualizadoEn;
 }
-

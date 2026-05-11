@@ -1,119 +1,90 @@
 package com.estetica.estetica.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 
 import java.math.BigDecimal;
 
-/**
- * DTO de entrada para crear o actualizar una {@code HistoriaClinicaCorporal}.
- *
- * <p>Todos los campos son <b>opcionales</b>: la ficha se puede completar progresivamente.
- * No se incluye {@code id}, {@code pacienteId} ni fechas de auditoría (los maneja el sistema
- * o se envían por path variable).</p>
- *
- * <p>Las únicas validaciones presentes son {@code DecimalMin("0.0")} sobre los campos
- * antropométricos ({@code pesoActual}, {@code pesoHabitual}, {@code imc},
- * {@code perimetroCintura}) para impedir valores negativos.</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-22
- * @see com.estetica.estetica.dto.response.HistoriaClinicaCorporalResponse
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "HistoriaClinicaCorporalRequest", description = "Datos clínicos corporales. Todos los campos son opcionales para permitir completado progresivo.")
 public class HistoriaClinicaCorporalRequest {
 
-    // ---- Antecedentes patológicos ----
-    private Boolean hta;
-    private Boolean dbt;
-    private Boolean hipotiroidismo;
-    private Boolean hipertiroidismo;
-    private Boolean anemia;
-    private Boolean enfermedadesAutoinmunes;
-    private Boolean glaucoma;
-    private Boolean enfermedadNeuromuscular;
-    private Boolean trastornosCoagulacion;
-    private Boolean alteracionCicatrizacion;
-    private Boolean marcapasos;
-    private Boolean protesisMetalica;
-    private Boolean cancer;
-    private String otroAntecedentePatologico;
+    @Schema(description = "Antecedente patológico: hipertensión arterial") private Boolean hta;
+    @Schema(description = "Antecedente patológico: diabetes") private Boolean dbt;
+    @Schema(description = "Antecedente patológico: hipotiroidismo") private Boolean hipotiroidismo;
+    @Schema(description = "Antecedente patológico: hipertiroidismo") private Boolean hipertiroidismo;
+    @Schema(description = "Antecedente patológico: anemia") private Boolean anemia;
+    @Schema(description = "Antecedente patológico: enfermedades autoinmunes") private Boolean enfermedadesAutoinmunes;
+    @Schema(description = "Antecedente patológico: glaucoma") private Boolean glaucoma;
+    @Schema(description = "Antecedente patológico: enfermedad neuromuscular") private Boolean enfermedadNeuromuscular;
+    @Schema(description = "Antecedente patológico: trastornos de coagulación") private Boolean trastornosCoagulacion;
+    @Schema(description = "Antecedente patológico: alteración de cicatrización") private Boolean alteracionCicatrizacion;
+    @Schema(description = "Antecedente patológico: marcapasos") private Boolean marcapasos;
+    @Schema(description = "Antecedente patológico: prótesis metálica") private Boolean protesisMetalica;
+    @Schema(description = "Antecedente patológico: cáncer") private Boolean cancer;
+    @Schema(description = "Otros antecedentes patológicos", example = "Hipertensión controlada con medicación") private String otroAntecedentePatologico;
 
-    // ---- Antecedentes tóxicos ----
-    private Boolean tbq;
-    private Boolean alcohol;
-    private String otrasToxico;
+    @Schema(description = "Tabaquismo") private Boolean tbq;
+    @Schema(description = "Consumo de alcohol") private Boolean alcohol;
+    @Schema(description = "Otros antecedentes tóxicos") private String otrasToxico;
 
-    // ---- Antecedentes alérgicos ----
-    private Boolean alergicoHuevo;
-    private Boolean alergicoAnestesia;
-    private Boolean alergicoFish;
-    private String otrasAlergias;
+    @Schema(description = "Alergia al huevo") private Boolean alergicoHuevo;
+    @Schema(description = "Alergia a anestesia") private Boolean alergicoAnestesia;
+    @Schema(description = "Alergia a pescado") private Boolean alergicoFish;
+    @Schema(description = "Otras alergias") private String otrasAlergias;
 
-    // ---- Antecedentes quirúrgicos ----
-    private String antecedentesQuirurgicos;
+    @Schema(description = "Antecedentes quirúrgicos") private String antecedentesQuirurgicos;
+    @Schema(description = "Fecha de última menstruación o dato ginecológico textual") private String fum;
+    @Schema(description = "Embarazo actual") private Boolean embarazo;
+    @Schema(description = "Lactancia actual") private Boolean lactancia;
 
-    // ---- Antecedentes ginecológicos ----
-    private String fum;
-    private Boolean embarazo;
-    private Boolean lactancia;
+    @Schema(description = "Herpes labial") private Boolean herpesLabial;
+    @Schema(description = "Medicación habitual") private String medicacionHabitual;
+    @Schema(description = "Consumió aspirina en la última semana") private Boolean aspirinaSemana;
 
-    // ---- Otros antecedentes ----
-    private Boolean herpesLabial;
-    private String medicacionHabitual;
-    private Boolean aspirinaSemana;
+    @Schema(description = "Alimentación saludable") private Boolean alimentacionSaludable;
+    @Schema(description = "Bebe agua habitualmente") private Boolean bebeAgua;
+    @Schema(description = "Sedentarismo o actividad física", example = "Camina 2 veces por semana") private String sedentarismoGimnasia;
+    @Schema(description = "Permanece muchas horas de pie") private Boolean ortostatismoProlongado;
+    @Schema(description = "Usa medias de compresión") private Boolean mediasCompresion;
+    @Schema(description = "Tuvo tratamientos corporales previos") private Boolean tratamientosPrevios;
+    @Schema(description = "Tratamientos corporales previos realizados") private String tratamientosPreviosCuales;
+    @Schema(description = "Cuándo se realizaron los tratamientos previos") private String tratamientosPreviosCuando;
+    @Schema(description = "Respuesta a tratamientos previos") private String tratamientosPreviosRespuesta;
+    @Schema(description = "Viaje programado en el próximo mes") private Boolean viajeProximoMes;
 
-    // ---- Hábitos corporales ----
-    private Boolean alimentacionSaludable;
-    private Boolean bebeAgua;
-    private String sedentarismoGimnasia;
-    private Boolean ortostatismoProlongado;
-    private Boolean mediasCompresion;
-    private Boolean tratamientosPrevios;
-    private String tratamientosPreviosCuales;
-    private String tratamientosPreviosCuando;
-    private String tratamientosPreviosRespuesta;
-    private Boolean viajeProximoMes;
+    @Schema(description = "Presencia de otros materiales") private String presenciaOtrosMateriales;
+    @Schema(description = "Secuelas de tratamientos previos") private String secuelasTratamientosPrevios;
+    @Schema(description = "Arañas vasculares") private Boolean aranasVasculares;
+    @Schema(description = "Telangiectasias") private Boolean telangiectasias;
+    @Schema(description = "Várices") private Boolean varices;
+    @Schema(description = "Celulitis") private Boolean celulitis;
+    @Schema(description = "Flacidez") private Boolean flacidez;
+    @Schema(description = "Estrías") private Boolean estrias;
+    @Schema(description = "Adiposidad localizada", example = "Abdomen y flancos") private String adiposidadLocalizada;
 
-    // ---- Examen corporal ----
-    private String presenciaOtrosMateriales;
-    private String secuelasTratamientosPrevios;
-    private Boolean aranasVasculares;
-    private Boolean telangiectasias;
-    private Boolean varices;
-    private Boolean celulitis;
-    private Boolean flacidez;
-    private Boolean estrias;
-    private String adiposidadLocalizada;
-
-    // ---- Medidas antropométricas ----
-
-    /** Peso actual en kg. No puede ser negativo. */
-    @DecimalMin(value = "0.0", inclusive = true, message = "El peso actual no puede ser negativo")
+    @Schema(description = "Peso actual en kilogramos", example = "65.50", minimum = "0.0")
+    @DecimalMin(value = "0.0", message = "El peso actual no puede ser negativo")
     private BigDecimal pesoActual;
 
-    /** Peso habitual en kg. No puede ser negativo. */
-    @DecimalMin(value = "0.0", inclusive = true, message = "El peso habitual no puede ser negativo")
+    @Schema(description = "Peso habitual en kilogramos", example = "63.00", minimum = "0.0")
+    @DecimalMin(value = "0.0", message = "El peso habitual no puede ser negativo")
     private BigDecimal pesoHabitual;
 
-    /** Índice de masa corporal. No puede ser negativo. */
-    @DecimalMin(value = "0.0", inclusive = true, message = "El IMC no puede ser negativo")
+    @Schema(description = "Índice de masa corporal", example = "23.40", minimum = "0.0")
+    @DecimalMin(value = "0.0", message = "El IMC no puede ser negativo")
     private BigDecimal imc;
 
-    /** Perímetro de cintura en cm. No puede ser negativo. */
-    @DecimalMin(value = "0.0", inclusive = true, message = "El perímetro de cintura no puede ser negativo")
+    @Schema(description = "Perímetro de cintura en centímetros", example = "78.00", minimum = "0.0")
+    @DecimalMin(value = "0.0", message = "El perímetro de cintura no puede ser negativo")
     private BigDecimal perimetroCintura;
 
-    // ---- Fotografía ----
-    private Boolean seTomaFotografia;
-
-    // ---- Tratamiento y seguimiento ----
-    private String diagnosticoYTratamiento;
-    private String observacionesPosteriores;
+    @Schema(description = "Se toma fotografía clínica") private Boolean seTomaFotografia;
+    @Schema(description = "Diagnóstico y tratamiento indicado") private String diagnosticoYTratamiento;
+    @Schema(description = "Observaciones posteriores") private String observacionesPosteriores;
 }
-

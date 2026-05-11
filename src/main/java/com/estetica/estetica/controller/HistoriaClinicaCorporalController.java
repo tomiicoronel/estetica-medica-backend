@@ -1,8 +1,17 @@
 package com.estetica.estetica.controller;
 
 import com.estetica.estetica.dto.request.HistoriaClinicaCorporalRequest;
+import com.estetica.estetica.dto.response.ErrorResponse;
 import com.estetica.estetica.dto.response.HistoriaClinicaCorporalResponse;
+import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import com.estetica.estetica.service.HistoriaClinicaCorporalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,74 +20,58 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-/**
- * Controlador REST que expone los endpoints para gestionar la
- * historia clínica corporal de los pacientes.
- *
- * <h3>Endpoints disponibles</h3>
- * <table>
- *     <tr><th>Método</th><th>Path</th><th>Acción</th><th>Status</th></tr>
- *     <tr><td>POST</td><td>/api/pacientes/{pacienteId}/historia-clinica-corporal</td>
- *         <td>Crear ficha corporal de un paciente</td><td>201 Created</td></tr>
- *     <tr><td>GET</td><td>/api/pacientes/{pacienteId}/historia-clinica-corporal</td>
- *         <td>Obtener ficha corporal de un paciente</td><td>200 OK</td></tr>
- *     <tr><td>PUT</td><td>/api/historia-clinica-corporal/{id}</td>
- *         <td>Actualizar ficha por ID</td><td>200 OK</td></tr>
- * </table>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-22
- * @see HistoriaClinicaCorporalService
- * @see com.estetica.estetica.exception.GlobalExceptionHandler
- */
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Historia Clínica Corporal", description = "Operaciones para crear, consultar y actualizar fichas clínicas corporales.")
 public class HistoriaClinicaCorporalController {
 
     private final HistoriaClinicaCorporalService service;
 
-    /**
-     * Crea la ficha clínica corporal de un paciente.
-     *
-     * @param pacienteId UUID del paciente (path)
-     * @param request    datos clínicos (body validado)
-     * @return {@code 201 Created} con la ficha creada
-     */
     @PostMapping("/api/pacientes/{pacienteId}/historia-clinica-corporal")
+    @Operation(summary = "Crear historia clínica corporal", description = "Crea una ficha corporal para un paciente. Cada paciente puede tener una sola ficha corporal.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Ficha corporal creada correctamente"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "El paciente ya tiene ficha corporal",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<HistoriaClinicaCorporalResponse> crear(
+            @Parameter(description = "UUID del paciente", example = "650e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID pacienteId,
             @Valid @RequestBody HistoriaClinicaCorporalRequest request) {
         HistoriaClinicaCorporalResponse response = service.crearFicha(pacienteId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Obtiene la ficha clínica corporal de un paciente.
-     *
-     * @param pacienteId UUID del paciente (path)
-     * @return {@code 200 OK} con la ficha
-     */
     @GetMapping("/api/pacientes/{pacienteId}/historia-clinica-corporal")
+    @Operation(summary = "Obtener historia clínica corporal", description = "Devuelve la ficha corporal asociada a un paciente.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ficha corporal encontrada"),
+            @ApiResponse(responseCode = "404", description = "Paciente o ficha corporal no encontrada",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<HistoriaClinicaCorporalResponse> obtenerPorPaciente(
+            @Parameter(description = "UUID del paciente", example = "650e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID pacienteId) {
         HistoriaClinicaCorporalResponse response = service.buscarPorPaciente(pacienteId);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Actualiza la ficha clínica corporal identificada por su UUID.
-     *
-     * @param id      UUID de la ficha (path)
-     * @param request datos clínicos actualizados (body validado, JSON completo)
-     * @return {@code 200 OK} con la ficha actualizada
-     */
     @PutMapping("/api/historia-clinica-corporal/{id}")
+    @Operation(summary = "Actualizar historia clínica corporal", description = "Actualiza una ficha corporal existente. El frontend puede enviar el JSON completo con un solo campo modificado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ficha corporal actualizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos",
+                    content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
+            @ApiResponse(responseCode = "404", description = "Ficha corporal no encontrada",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<HistoriaClinicaCorporalResponse> actualizar(
+            @Parameter(description = "UUID de la ficha corporal", example = "960e8400-e29b-41d4-a716-446655440000")
             @PathVariable UUID id,
             @Valid @RequestBody HistoriaClinicaCorporalRequest request) {
         HistoriaClinicaCorporalResponse response = service.actualizarFicha(id, request);
         return ResponseEntity.ok(response);
     }
 }
-

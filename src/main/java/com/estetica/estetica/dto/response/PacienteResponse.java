@@ -1,88 +1,77 @@
 package com.estetica.estetica.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * DTO de salida que representa los datos de un paciente devueltos por la API.
- *
- * <p>Incluye el {@code id} generado por el sistema, todos los campos relevantes
- * del paciente, el {@code profesionalId} para identificar a qué profesional pertenece,
- * y las fechas de auditoría.</p>
- *
- * @author estetica
- * @version 1.0
- * @since 2026-04-20
- * @see com.estetica.estetica.dto.request.PacienteRequest
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(name = "PacienteResponse", description = "Datos devueltos por la API para un paciente.")
 public class PacienteResponse {
 
-    /** Identificador único del paciente (UUID). */
+    @Schema(description = "Identificador único UUID del paciente", example = "650e8400-e29b-41d4-a716-446655440000")
     private UUID id;
 
-    /** UUID de la profesional que atiende a este paciente. */
+    @Schema(description = "UUID de la profesional que atiende al paciente", example = "550e8400-e29b-41d4-a716-446655440000")
     private UUID profesionalId;
 
-    /** Nombre del paciente. */
+    @Schema(description = "Nombre del paciente", example = "Ana")
     private String nombre;
 
-    /** Apellido del paciente. */
+    @Schema(description = "Apellido del paciente", example = "Pérez")
     private String apellido;
 
-    /** DNI o CUIT del paciente. */
+    @Schema(description = "DNI o CUIT", example = "30111222")
     private String dniCuit;
 
-    /** Fecha de nacimiento. */
+    @Schema(description = "Fecha de nacimiento", example = "1990-05-20")
     private LocalDate fechaNacimiento;
 
-    /** Teléfono de contacto. */
+    @Schema(description = "Teléfono de contacto", example = "1122334455")
     private String telefono;
 
-    /** Email del paciente. */
+    @Schema(description = "Email del paciente", example = "ana@email.com")
     private String email;
 
-    /** Profesión u ocupación. */
+    @Schema(description = "Profesión u ocupación", example = "Docente")
     private String profesion;
 
-    /** Domicilio. */
+    @Schema(description = "Domicilio", example = "Av. Siempre Viva 742")
     private String domicilio;
 
-    /** Obra social. */
+    @Schema(description = "Obra social", example = "OSDE")
     private String obraSocial;
 
-    /** Número de afiliado de la obra social. */
+    @Schema(description = "Número de afiliado de obra social", example = "123456789")
     private String numeroObraSocial;
 
-    /** Nombre del contacto de emergencia. */
+    @Schema(description = "Nombre del contacto de emergencia", example = "Laura Pérez")
     private String contactoEmergenciaNombre;
 
-    /** Teléfono del contacto de emergencia. */
+    @Schema(description = "Teléfono del contacto de emergencia", example = "1199887766")
     private String contactoEmergenciaTelefono;
 
-    /** Parentesco del contacto de emergencia. */
+    @Schema(description = "Parentesco del contacto de emergencia", example = "Hermana")
     private String contactoEmergenciaParentesco;
 
-    /** Primera entidad de traslado. */
+    @Schema(description = "Primera entidad de traslado", example = "Hospital Italiano")
     private String entidadTraslado1;
 
-    /** Segunda entidad de traslado. */
+    @Schema(description = "Segunda entidad de traslado", example = "Sanatorio Güemes")
     private String entidadTraslado2;
 
-    /** Indica si el paciente está activo o archivado. */
+    @Schema(description = "Indica si el paciente está activo o archivado", example = "true")
     private Boolean activo;
 
-    /** Fecha y hora de creación del registro. */
+    @Schema(description = "Fecha y hora de creación", example = "2026-04-24T10:30:00")
     private LocalDateTime creadoEn;
 
-    /** Fecha y hora de la última actualización. */
+    @Schema(description = "Fecha y hora de última actualización", example = "2026-04-24T10:30:00")
     private LocalDateTime actualizadoEn;
 }
-
