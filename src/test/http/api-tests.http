@@ -1,42 +1,34 @@
 ### ============================================================
-### API TESTS — Estética MVP
+### Variables base
 ### ============================================================
-### Cómo usar:
-### 1) Levantá la app (./mvnw spring-boot:run).
-### 2) Apretá el triángulo ▶ verde al lado de cada request.
-### 3) Los bloques "> {% ... %}" guardan automáticamente el ID
-###    del recurso recién creado para reutilizarlo en el siguiente.
-### ============================================================
-
 @host = http://localhost:8080
-
 
 ### ============================================================
 ### 1. PROFESIONAL
 ### ============================================================
 
 ### 1.1 Crear profesional — 201 Created
+# @name crearProfesional
 POST {{host}}/api/profesionales
 Content-Type: application/json
 
 {
   "nombre": "María",
-  "apellido": "Pérez",
-  "email": "maria.perez@estetica.com",
-  "telefono": "1144556677",
-  "especialidad": "Dermatología estética"
+  "apellido": "González",
+  "email": "maria.gonzalez@estetica.com",
+  "telefono": "3514567890",
+  "especialidad": "Estética facial"
 }
 
-> {% client.global.set("profesionalId", response.body.id); %}
+###
 
+@profesionalId = {{crearProfesional.response.body.id}}
 
-### 1.2 Listar profesionales — 200 OK
+### 1.2 Listar todas las profesionales — 200 OK
 GET {{host}}/api/profesionales
-
 
 ### 1.3 Buscar profesional por ID — 200 OK
 GET {{host}}/api/profesionales/{{profesionalId}}
-
 
 ### 1.4 Actualizar profesional — 200 OK
 PUT {{host}}/api/profesionales/{{profesionalId}}
@@ -44,404 +36,688 @@ Content-Type: application/json
 
 {
   "nombre": "María",
-  "apellido": "Pérez López",
-  "email": "maria.perez@estetica.com",
-  "telefono": "1144556677",
-  "especialidad": "Dermatología estética avanzada"
+  "apellido": "González López",
+  "email": "maria.gonzalez@estetica.com",
+  "telefono": "3514567890",
+  "especialidad": "Estética facial y corporal"
 }
 
-
-### ============================================================
-### 2. PACIENTE (anidado bajo profesional)
-### ============================================================
-
-### 2.1 Crear paciente — 201 Created
-POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
-Content-Type: application/json
-
-{
-  "nombre": "Ana",
-  "apellido": "García",
-  "dniCuit": "30123456",
-  "telefono": "1166778899",
-  "email": "ana.garcia@mail.com",
-  "fechaNacimiento": "1990-05-14",
-  "profesion": "Abogada",
-  "domicilio": "Av. Siempre Viva 742",
-  "obraSocial": "OSDE",
-  "numeroObraSocial": "123456",
-  "contactoEmergenciaNombre": "Luis García",
-  "contactoEmergenciaTelefono": "1188990011",
-  "contactoEmergenciaParentesco": "Esposo"
-}
-
-> {% client.global.set("pacienteId", response.body.id); %}
-
-
-### 2.2 Listar pacientes de la profesional — 200 OK
-GET {{host}}/api/profesionales/{{profesionalId}}/pacientes
-
-
-### 2.3 Listar solo los activos — 200 OK
-GET {{host}}/api/profesionales/{{profesionalId}}/pacientes/activos
-
-
-### 2.4 Buscar paciente por ID — 200 OK
-GET {{host}}/api/pacientes/{{pacienteId}}
-
-
-### 2.5 Actualizar paciente — 200 OK
-PUT {{host}}/api/pacientes/{{pacienteId}}
-Content-Type: application/json
-
-{
-  "profesionalId": "{{profesionalId}}",
-  "nombre": "Ana",
-  "apellido": "García",
-  "dniCuit": "30123456",
-  "telefono": "1166778899",
-  "email": "ana.garcia.nuevo@mail.com",
-  "fechaNacimiento": "1990-05-14"
-}
-
-
-### 2.6 Archivar paciente (soft delete) — 200 OK
-PATCH {{host}}/api/pacientes/{{pacienteId}}/estado?activo=false
-
-
-### 2.7 Reactivar paciente — 200 OK
-PATCH {{host}}/api/pacientes/{{pacienteId}}/estado?activo=true
-
-
-### ============================================================
-### 3. SERVICIO (anidado bajo profesional)
-### ============================================================
-
-### 3.1 Crear servicio — 201 Created
-POST {{host}}/api/profesionales/{{profesionalId}}/servicios
-Content-Type: application/json
-
-{
-  "nombre": "Limpieza facial profunda",
-  "descripcion": "Incluye exfoliación, extracción y máscara calmante",
-  "precio": 25000.00
-}
-
-> {% client.global.set("servicioId", response.body.id); %}
-
-
-### 3.2 Listar servicios de la profesional — 200 OK
-GET {{host}}/api/profesionales/{{profesionalId}}/servicios
-
-
-### 3.3 Buscar servicio por ID — 200 OK
-GET {{host}}/api/servicios/{{servicioId}}
-
-
-### 3.4 Actualizar precio del servicio — 200 OK
-PATCH {{host}}/api/servicios/{{servicioId}}/precio?precio=28000.00
-
-
-### 3.5 Desactivar servicio — 200 OK
-PATCH {{host}}/api/servicios/{{servicioId}}/estado?activo=false
-
-
-### ============================================================
-### 4. HISTORIA CLÍNICA FACIAL
-### ============================================================
-
-### 4.1 Crear ficha facial — 201 Created
-POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
-Content-Type: application/json
-
-{
-  "hta": false,
-  "dbt": false,
-  "hipotiroidismo": false,
-  "hipertiroidismo": false,
-  "anemia": false,
-  "enfermedadesAutoinmunes": false,
-  "glaucoma": false,
-  "enfermedadNeuromuscular": false,
-  "trastornosCoagulacion": false,
-  "alteracionCicatrizacion": false,
-  "marcapasos": false,
-  "protesisMetalica": false,
-  "tbq": true,
-  "alcohol": false,
-  "alergicoHuevo": false,
-  "alergicoAnestesia": false,
-  "alergicoFish": false,
-  "embarazo": false,
-  "herpesLabial": true,
-  "aspirinaSemana": false,
-  "medicacionHabitual": "Losartán 50mg",
-  "exposicionSolar": true,
-  "usaProteccionSolar": true,
-  "proteccionSolarCual": "Eucerin FPS 50",
-  "proteccionSolarVecesDia": "2",
-  "habitosHigieneFacial": "Limpieza nocturna con agua micelar",
-  "tratamientoDomiciliario": "Retinol 0.3% nocturno",
-  "tratamientosPrevios": false,
-  "viajeProximoMes": false,
-  "seTomaFotografia": true,
-  "fototipoFitzpatrick": 3,
-  "gradoGlogau": 2,
-  "diagnosticoYTratamiento": "Fotoenvejecimiento moderado. Plan: peeling químico + protección solar estricta."
-}
-
-> {% client.global.set("fichaId", response.body.id); %}
-
-
-### 4.2 Obtener ficha facial del paciente — 200 OK
-GET {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
-
-
-### 4.3 Actualizar ficha (PUT, JSON completo) — 200 OK
-### El frontend siempre manda el JSON entero, aunque la profesional
-### haya tocado un solo campo. Acá cambiamos "tbq" a false y agregamos
-### datos de un tratamiento previo y observaciones posteriores.
-PUT {{host}}/api/historia-clinica-facial/{{fichaId}}
-Content-Type: application/json
-
-{
-  "hta": false,
-  "dbt": false,
-  "hipotiroidismo": false,
-  "hipertiroidismo": false,
-  "anemia": false,
-  "enfermedadesAutoinmunes": false,
-  "glaucoma": false,
-  "enfermedadNeuromuscular": false,
-  "trastornosCoagulacion": false,
-  "alteracionCicatrizacion": false,
-  "marcapasos": false,
-  "protesisMetalica": false,
-  "tbq": false,
-  "alcohol": false,
-  "alergicoHuevo": false,
-  "alergicoAnestesia": false,
-  "alergicoFish": false,
-  "embarazo": false,
-  "herpesLabial": true,
-  "aspirinaSemana": false,
-  "medicacionHabitual": "Losartán 50mg",
-  "exposicionSolar": true,
-  "usaProteccionSolar": true,
-  "proteccionSolarCual": "ISDIN FPS 50+",
-  "proteccionSolarVecesDia": "3",
-  "habitosHigieneFacial": "Limpieza nocturna con agua micelar",
-  "tratamientoDomiciliario": "Retinol 0.3% nocturno + vitamina C AM",
-  "tratamientosPrevios": true,
-  "tratamientosPreviosCuales": "Peeling químico superficial",
-  "tratamientosPreviosRespuesta": "Buena tolerancia, sin eventos adversos",
-  "viajeProximoMes": false,
-  "seTomaFotografia": true,
-  "fototipoFitzpatrick": 3,
-  "gradoGlogau": 2,
-  "diagnosticoYTratamiento": "Fotoenvejecimiento moderado. Continuar con peeling + ácido hialurónico tópico.",
-  "observacionesPosteriores": "Paciente dejó de fumar. Mejor elasticidad a los 30 días."
-}
-
-
-### ============================================================
-### 5. CASOS DE ERROR (validación del GlobalExceptionHandler)
-### ============================================================
-
-### 5.1 Crear ficha duplicada — 409 Conflict
-POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
-Content-Type: application/json
-
-{
-  "hta": true
-}
-
-
-### 5.2 Crear ficha para paciente inexistente — 404 Not Found
-POST {{host}}/api/pacientes/00000000-0000-0000-0000-000000000000/historia-clinica-facial
-Content-Type: application/json
-
-{
-  "hta": true
-}
-
-
-### 5.3 Obtener ficha de paciente inexistente — 404 Not Found
-GET {{host}}/api/pacientes/00000000-0000-0000-0000-000000000000/historia-clinica-facial
-
-
-### 5.4 Validación: fototipo fuera de rango (debe ser 1-6) — 400 Bad Request
-POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
-Content-Type: application/json
-
-{
-  "fototipoFitzpatrick": 9
-}
-
-
-### 5.5 UUID mal formado en path — 400 Bad Request
-GET {{host}}/api/pacientes/no-es-uuid/historia-clinica-facial
-
-
-### 5.6 Actualizar ficha inexistente — 404 Not Found
-PUT {{host}}/api/historia-clinica-facial/00000000-0000-0000-0000-000000000000
-Content-Type: application/json
-
-{
-  "hta": true
-}
-
-
-### 5.7 Crear profesional con email duplicado — 400 Bad Request
+### 1.5 Crear profesional con email duplicado — 400 Bad Request
 POST {{host}}/api/profesionales
 Content-Type: application/json
 
 {
   "nombre": "Otra",
-  "apellido": "Profesional",
-  "email": "maria.perez@estetica.com",
-  "telefono": "1100000000",
-  "especialidad": "Cosmiatría"
+  "apellido": "Persona",
+  "email": "maria.gonzalez@estetica.com",
+  "telefono": "3514000000",
+  "especialidad": "Test"
 }
 
+### 1.6 Crear profesional sin email — 400 Bad Request (validación)
+POST {{host}}/api/profesionales
+Content-Type: application/json
 
-### 5.8 Crear paciente sin nombre — 400 Bad Request (validación @Valid)
+{
+  "nombre": "Sin",
+  "apellido": "Email",
+  "telefono": "3514000000",
+  "especialidad": "Test"
+}
+
+### 1.7 Buscar profesional inexistente — 404 Not Found
+GET {{host}}/api/profesionales/00000000-0000-0000-0000-000000000000
+
+### ============================================================
+### 2. SERVICIO
+### ============================================================
+
+### 2.1 Crear servicio — 201 Created
+# @name crearServicio
+POST {{host}}/api/profesionales/{{profesionalId}}/servicios
+Content-Type: application/json
+
+{
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Limpieza facial profunda",
+  "descripcion": "Tratamiento completo de limpieza con extracción",
+  "precio": 30000.00
+}
+
+###
+
+@servicioId = {{crearServicio.response.body.id}}
+
+### 2.2 Crear segundo servicio — 201 Created
+# @name crearServicio2
+POST {{host}}/api/profesionales/{{profesionalId}}/servicios
+Content-Type: application/json
+
+{
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Mesoterapia facial",
+  "descripcion": "Aplicación de vitaminas y antioxidantes",
+  "precio": 25000.00
+}
+
+###
+
+@servicioId2 = {{crearServicio2.response.body.id}}
+
+### 2.3 Listar servicios de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/servicios
+
+### 2.4 Buscar servicio por ID — 200 OK
+GET {{host}}/api/servicios/{{servicioId}}
+
+### 2.5 Actualizar precio (PATCH) — 200 OK
+PATCH {{host}}/api/servicios/{{servicioId}}/precio?nuevoPrecio=35000.00
+
+### 2.6 Cambiar estado a inactivo — 200 OK
+PATCH {{host}}/api/servicios/{{servicioId2}}/estado?activo=false
+
+### 2.7 Listar solo activos — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/servicios/activos
+
+### 2.8 Reactivar servicio — 200 OK
+PATCH {{host}}/api/servicios/{{servicioId2}}/estado?activo=true
+
+### 2.9 Crear servicio con nombre duplicado — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/servicios
+Content-Type: application/json
+
+{
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Limpieza facial profunda",
+  "descripcion": "Otro",
+  "precio": 10000.00
+}
+
+### ============================================================
+### 3. PACIENTE
+### ============================================================
+
+### 3.1 Crear paciente completo — 201 Created
+# @name crearPaciente
+POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
+Content-Type: application/json
+
+{
+  "nombre": "Laura",
+  "apellido": "Martínez",
+  "dniCuit": "30123456",
+  "fechaNacimiento": "1990-05-15",
+  "telefono": "3519876543",
+  "email": "laura@gmail.com",
+  "profesion": "Contadora",
+  "domicilio": "Av. Colón 1234, Córdoba",
+  "obraSocial": "OSDE",
+  "numeroObraSocial": "12345678",
+  "contactoEmergenciaNombre": "Carlos Martínez",
+  "contactoEmergenciaTelefono": "3519876543",
+  "contactoEmergenciaParentesco": "Esposo",
+  "entidadTraslado1": "Hospital Privado",
+  "entidadTraslado2": "Sanatorio Allende"
+}
+
+###
+
+@pacienteId = {{crearPaciente.response.body.id}}
+
+### 3.2 Crear paciente con mínimos — 201 Created
+POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
+Content-Type: application/json
+
+{
+  "nombre": "Sofía",
+  "apellido": "García",
+  "dniCuit": "29876543",
+  "telefono": "3514567890"
+}
+
+### 3.3 Listar pacientes de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/pacientes
+
+### 3.4 Buscar paciente por ID — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}
+
+### 3.5 Actualizar paciente — 200 OK
+PUT {{host}}/api/pacientes/{{pacienteId}}
+Content-Type: application/json
+
+{
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Laura",
+  "apellido": "Martínez de López",
+  "dniCuit": "30123456",
+  "fechaNacimiento": "1990-05-15",
+  "telefono": "3519876543",
+  "email": "laura.lopez@gmail.com",
+  "profesion": "Contadora",
+  "domicilio": "Av. Colón 1234, Córdoba",
+  "obraSocial": "OSDE",
+  "numeroObraSocial": "12345678",
+  "contactoEmergenciaNombre": "Carlos Martínez",
+  "contactoEmergenciaTelefono": "3519876543",
+  "contactoEmergenciaParentesco": "Esposo",
+  "entidadTraslado1": "Hospital Privado",
+  "entidadTraslado2": "Sanatorio Allende"
+}
+
+### 3.6 DNI duplicado — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
+Content-Type: application/json
+
+{
+  "nombre": "Otra",
+  "apellido": "Persona",
+  "dniCuit": "30123456",
+  "telefono": "3511111111"
+}
+
+### 3.7 Crear sin nombre — 400 Bad Request
 POST {{host}}/api/profesionales/{{profesionalId}}/pacientes
 Content-Type: application/json
 
 {
   "apellido": "Sin Nombre",
-  "dniCuit": "99999999",
-  "telefono": "1100000000"
+  "dniCuit": "11111111",
+  "telefono": "3512222222"
 }
 
+### ============================================================
+### 4. HISTORIA CLÍNICA FACIAL
+### ============================================================
+
+### 4.1 Crear historia clínica facial — 201 Created
+# @name crearHCFacial
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "hta": false,
+  "dbt": false,
+  "hipotiroidismo": false,
+  "anemia": false,
+  "alergicoHuevo": false,
+  "alergicoAnestesia": false,
+  "alergicoFish": false,
+  "tbq": false,
+  "alcohol": false,
+  "herpesLabial": false,
+  "embarazo": false,
+  "aspirinaSemana": false,
+  "exposicionSolar": true,
+  "usaProteccionSolar": true,
+  "proteccionSolarCual": "FPS 50",
+  "proteccionSolarVecesDia": "2 veces al día",
+  "fototipoFitzpatrick": 3,
+  "gradoGlogau": 2,
+  "diagnosticoYTratamiento": "Piel mixta con leve fotoenvejecimiento. Plan: limpieza profunda mensual + mesoterapia."
+}
+
+###
+
+@historiaFacialId = {{crearHCFacial.response.body.id}}
+
+### 4.2 Obtener historia facial del paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+
+### 4.3 Actualizar historia facial — 200 OK
+PUT {{host}}/api/historia-clinica-facial/{{historiaFacialId}}
+Content-Type: application/json
+
+{
+  "hta": false,
+  "dbt": false,
+  "alergicoHuevo": true,
+  "alergicoAnestesia": false,
+  "alergicoFish": false,
+  "otrasAlergias": "Polen",
+  "fototipoFitzpatrick": 3,
+  "gradoGlogau": 2,
+  "diagnosticoYTratamiento": "Actualización: detectada alergia al huevo y polen.",
+  "observacionesPosteriores": "Tolera bien los tratamientos previos"
+}
+
+### 4.4 Intentar crear segunda ficha facial — 409 Conflict
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-facial
+Content-Type: application/json
+
+{
+  "hta": false
+}
 
 ### ============================================================
-### 6. SPRINT 6 — SESIÓN CLÍNICA + FOTO PACIENTE
+### 5. HISTORIA CLÍNICA CORPORAL
 ### ============================================================
 
-### 6.1 Crear servicio activo para turnos — 201 Created
+### 5.1 Crear historia corporal — 201 Created
+# @name crearHCCorporal
+POST {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-corporal
+Content-Type: application/json
+
+{
+  "hta": false,
+  "dbt": false,
+  "cancer": false,
+  "embarazo": false,
+  "lactancia": false,
+  "alimentacionSaludable": true,
+  "bebeAgua": true,
+  "ortostatismoProlongado": false,
+  "mediasCompresion": false,
+  "celulitis": true,
+  "varices": false,
+  "estrias": true,
+  "flacidez": false,
+  "pesoActual": 65.50,
+  "pesoHabitual": 64.00,
+  "imc": 23.10,
+  "perimetroCintura": 78.00,
+  "diagnosticoYTratamiento": "Celulitis grado 2 en muslos y abdomen. Plan: radiofrecuencia + mesoterapia corporal."
+}
+
+###
+
+@historiaCorporalId = {{crearHCCorporal.response.body.id}}
+
+### 5.2 Obtener historia corporal — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/historia-clinica-corporal
+
+### ============================================================
+### 6. TURNO
+### ============================================================
+
+### 6.1 Crear turno con un servicio — 201 Created
+# @name crearTurno
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2027-06-15T10:00:00",
+  "servicioIds": ["{{servicioId}}"],
+  "observaciones": "Primera sesión de limpieza facial"
+}
+
+###
+
+@turnoId = {{crearTurno.response.body.id}}
+
+### 6.2 Crear turno con múltiples servicios — 201 Created
+# @name crearTurnoMultiple
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2027-06-20T15:00:00",
+  "servicioIds": ["{{servicioId}}", "{{servicioId2}}"],
+  "observaciones": "Sesión combinada: limpieza + mesoterapia"
+}
+
+###
+
+@turnoMultipleId = {{crearTurnoMultiple.response.body.id}}
+
+### 6.3 Listar turnos de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/turnos
+
+### 6.4 Filtrar turnos por estado — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/turnos?estado=PENDIENTE
+
+### 6.5 Listar turnos del paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/turnos
+
+### 6.6 Buscar turno por ID — 200 OK
+GET {{host}}/api/turnos/{{turnoId}}
+
+### 6.7 Cambiar estado a CONFIRMADO — 200 OK
+PATCH {{host}}/api/turnos/{{turnoId}}/estado?nuevoEstado=CONFIRMADO
+
+### 6.8 Intentar transición inválida (CONFIRMADO -> PENDIENTE) — 400 Bad Request
+PATCH {{host}}/api/turnos/{{turnoId}}/estado?nuevoEstado=PENDIENTE
+
+### 6.9 Crear turno con fecha pasada — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2020-01-01T10:00:00",
+  "servicioIds": ["{{servicioId}}"]
+}
+
+### 6.10 Crear turno con servicio inactivo — 400 Bad Request
+PATCH {{host}}/api/servicios/{{servicioId2}}/estado?activo=false
+
+###
+
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2027-07-01T10:00:00",
+  "servicioIds": ["{{servicioId2}}"]
+}
+
+### Reactivar servicio2 para tests siguientes
+PATCH {{host}}/api/servicios/{{servicioId2}}/estado?activo=true
+
+### ============================================================
+### 6B. PRECIO CONGELADO (precioMomento)
+### Verifica que un turno conserve el precio del servicio
+### al momento de crearse, aunque el servicio cambie de precio despues.
+### ============================================================
+
+### 6B.1 Crear servicio con precio conocido — 201 Created
+# @name servicioPrecio
 POST {{host}}/api/profesionales/{{profesionalId}}/servicios
 Content-Type: application/json
 
 {
-  "nombre": "Peeling químico superficial",
-  "descripcion": "Peeling suave para renovación celular",
-  "precio": 30000.00
+  "profesionalId": "{{profesionalId}}",
+  "nombre": "Radiofrecuencia facial",
+  "descripcion": "Tratamiento de radiofrecuencia",
+  "precio": 40000.00
 }
 
-> {% client.global.set("servicioTurnoId", response.body.id); %}
+###
 
+@servicioPrecioId = {{servicioPrecio.response.body.id}}
 
-### 6.2 Crear turno que quedará REALIZADO — 201 Created
+### 6B.2 Crear turno con ese servicio (congela precio en 40000) — 201 Created
+# @name turnoPrecio
 POST {{host}}/api/profesionales/{{profesionalId}}/turnos
 Content-Type: application/json
 
 {
   "pacienteId": "{{pacienteId}}",
-  "fechaHora": "2026-12-10T15:30:00",
-  "servicioIds": ["{{servicioTurnoId}}"],
-  "observaciones": "Turno para registrar sesión clínica"
+  "fechaHora": "2027-10-10T10:00:00",
+  "servicioIds": ["{{servicioPrecioId}}"],
+  "observaciones": "Turno para probar precio congelado"
 }
 
-> {% client.global.set("turnoRealizadoId", response.body.id); %}
+###
 
+@turnoPrecioId = {{turnoPrecio.response.body.id}}
 
-### 6.3 Confirmar turno — 200 OK
-PATCH {{host}}/api/turnos/{{turnoRealizadoId}}/estado?nuevoEstado=CONFIRMADO
+### 6B.3 Verificar turno: montoTotal y precioMomento deben ser 40000 — 200 OK
+GET {{host}}/api/turnos/{{turnoPrecioId}}
 
+### 6B.4 Cambiar el precio del servicio a 99000 — 200 OK
+PATCH {{host}}/api/servicios/{{servicioPrecioId}}/precio?nuevoPrecio=99000.00
 
-### 6.4 Marcar turno como REALIZADO — 200 OK
-PATCH {{host}}/api/turnos/{{turnoRealizadoId}}/estado?nuevoEstado=REALIZADO
+### 6B.5 Verificar que el servicio ahora vale 99000 — 200 OK
+GET {{host}}/api/servicios/{{servicioPrecioId}}
 
+### 6B.6 CLAVE: el turno DEBE seguir con precio congelado 40000 — 200 OK
+### Si muestra 99000, el snapshot de precio NO funciona.
+GET {{host}}/api/turnos/{{turnoPrecioId}}
 
-### 6.5 Crear sesión clínica para turno REALIZADO — 201 Created
-POST {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+### 6B.7 Crear turno NUEVO con el mismo servicio (debe tomar 99000) — 201 Created
+# @name turnoPrecioNuevo
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
 Content-Type: application/json
 
 {
-  "tratamiento": "Peeling químico superficial en rostro completo",
-  "respuestaTolerancia": "Buena tolerancia, eritema leve esperado",
-  "observaciones": "Indicar hidratación y protector solar"
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2027-10-11T10:00:00",
+  "servicioIds": ["{{servicioPrecioId}}"],
+  "observaciones": "Turno nuevo, debe tomar precio actualizado"
 }
 
-> {% client.global.set("sesionClinicaId", response.body.id); %}
+### 6B.8 Verificar que el turno nuevo tiene montoTotal 99000 — 200 OK
+GET {{host}}/api/turnos/{{turnoPrecioNuevo.response.body.id}}
 
+### ============================================================
+### 7. PAGO
+### ============================================================
 
-### 6.6 Obtener sesión clínica del turno — 200 OK
-GET {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+### 7.1 Pago parcial en efectivo — 201 Created
+# @name pago1
+POST {{host}}/api/turnos/{{turnoId}}/pagos
+Content-Type: application/json
 
+{
+  "metodo": "EFECTIVO",
+  "monto": 15000.00,
+  "esSena": false
+}
 
-### 6.7 Listar sesiones clínicas del paciente — 200 OK
+###
+
+@pagoId = {{pago1.response.body.id}}
+
+### 7.2 Resumen con deuda — 200 OK
+GET {{host}}/api/turnos/{{turnoId}}/pagos/resumen
+
+### 7.3 Segundo pago en transferencia (completa el total) — 201 Created
+POST {{host}}/api/turnos/{{turnoId}}/pagos
+Content-Type: application/json
+
+{
+  "metodo": "TRANSFERENCIA",
+  "monto": 20000.00,
+  "esSena": false
+}
+
+### 7.4 Resumen sin deuda — 200 OK
+GET {{host}}/api/turnos/{{turnoId}}/pagos/resumen
+
+### 7.5 Listar pagos del turno — 200 OK
+GET {{host}}/api/turnos/{{turnoId}}/pagos
+
+### 7.6 Intentar pago que supera el total — 400 Bad Request
+POST {{host}}/api/turnos/{{turnoId}}/pagos
+Content-Type: application/json
+
+{
+  "metodo": "EFECTIVO",
+  "monto": 5000.00
+}
+
+### 7.7 Pago de TRUEQUE sin detalle — 400 Bad Request
+POST {{host}}/api/turnos/{{turnoMultipleId}}/pagos
+Content-Type: application/json
+
+{
+  "metodo": "TRUEQUE",
+  "monto": 10000.00
+}
+
+### 7.8 Pago de TRUEQUE válido — 201 Created
+POST {{host}}/api/turnos/{{turnoMultipleId}}/pagos
+Content-Type: application/json
+
+{
+  "metodo": "TRUEQUE",
+  "monto": 10000.00,
+  "detalleTrueque": "Intercambio por sesión de fotografía profesional"
+}
+
+### 7.9 Listar pagos de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/pagos
+
+### ============================================================
+### 8. SESIÓN CLÍNICA Y FOTOS
+### ============================================================
+
+### 8.1 Cambiar turno a REALIZADO — 200 OK
+PATCH {{host}}/api/turnos/{{turnoId}}/estado?nuevoEstado=REALIZADO
+
+### 8.2 Crear sesión clínica — 201 Created
+# @name crearSesion
+POST {{host}}/api/turnos/{{turnoId}}/sesion-clinica
+Content-Type: application/json
+
+{
+  "tratamiento": "Limpieza facial profunda con extracción de comedones y máscara hidratante",
+  "respuestaTolerancia": "Buena tolerancia, leve eritema esperado que cedió en 2 horas",
+  "observaciones": "Indicar protector solar FPS 50 y control en 15 días"
+}
+
+###
+
+@sesionId = {{crearSesion.response.body.id}}
+
+### 8.3 Obtener sesión clínica del turno — 200 OK
+GET {{host}}/api/turnos/{{turnoId}}/sesion-clinica
+
+### 8.4 Listar sesiones del paciente — 200 OK
 GET {{host}}/api/pacientes/{{pacienteId}}/sesiones-clinicas
 
-
-### 6.8 Actualizar sesión clínica — 200 OK
-PUT {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}
+### 8.5 Actualizar sesión — 200 OK
+PUT {{host}}/api/sesiones-clinicas/{{sesionId}}
 Content-Type: application/json
 
 {
-  "tratamiento": "Peeling químico superficial + máscara calmante",
-  "respuestaTolerancia": "Muy buena tolerancia, sin molestias relevantes",
-  "observaciones": "Control en 15 días"
+  "tratamiento": "Limpieza facial profunda + extracción + máscara hidratante + sérum vitamina C",
+  "respuestaTolerancia": "Excelente tolerancia, sin reacciones adversas",
+  "observaciones": "Próximo control en 30 días"
 }
 
-
-### 6.9 Intentar crear segunda sesión para el mismo turno — 409 Conflict
-POST {{host}}/api/turnos/{{turnoRealizadoId}}/sesion-clinica
+### 8.6 Intentar segunda sesión para el mismo turno — 409 Conflict
+POST {{host}}/api/turnos/{{turnoId}}/sesion-clinica
 Content-Type: application/json
 
 {
-  "tratamiento": "Intento duplicado",
-  "respuestaTolerancia": "No debería crearse"
+  "tratamiento": "Otra cosa",
+  "respuestaTolerancia": "Test"
 }
 
+### 8.7 Registrar foto — 201 Created
+POST {{host}}/api/sesiones-clinicas/{{sesionId}}/fotos
+Content-Type: application/json
 
-### 6.10 Crear turno PENDIENTE para probar error — 201 Created
+{
+  "sesionClinicaId": "{{sesionId}}",
+  "descripcion": "Antes del tratamiento, perfil derecho"
+}
+
+### 8.8 Listar fotos del paciente — 200 OK
+GET {{host}}/api/pacientes/{{pacienteId}}/fotos
+
+### 8.9 Listar fotos de la sesión — 200 OK
+GET {{host}}/api/sesiones-clinicas/{{sesionId}}/fotos
+
+### 8.10 Intentar eliminar pago de turno REALIZADO — 400 Bad Request
+DELETE {{host}}/api/pagos/{{pagoId}}
+
+### ============================================================
+### 9. BLOQUEO DE AGENDA
+### ============================================================
+
+### 9.1 Crear bloqueo válido — 201 Created
+# @name crearBloqueo
+POST {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
+Content-Type: application/json
+
+{
+  "fechaInicio": "2027-08-01T00:00:00",
+  "fechaFin": "2027-08-05T23:59:59",
+  "motivo": "Vacaciones de invierno"
+}
+
+###
+
+@bloqueoId = {{crearBloqueo.response.body.id}}
+
+### 9.2 Listar bloqueos de la profesional — 200 OK
+GET {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
+
+### 9.3 Buscar bloqueo por ID — 200 OK
+GET {{host}}/api/bloqueos-agenda/{{bloqueoId}}
+
+### 9.4 Actualizar bloqueo — 200 OK
+PUT {{host}}/api/bloqueos-agenda/{{bloqueoId}}
+Content-Type: application/json
+
+{
+  "fechaInicio": "2027-08-01T00:00:00",
+  "fechaFin": "2027-08-07T23:59:59",
+  "motivo": "Vacaciones de invierno extendidas"
+}
+
+### 9.5 Crear bloqueo con fechaFin antes de fechaInicio — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
+Content-Type: application/json
+
+{
+  "fechaInicio": "2027-09-10T10:00:00",
+  "fechaFin": "2027-09-05T10:00:00",
+  "motivo": "Inválido"
+}
+
+### 9.6 Crear bloqueo en el pasado — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
+Content-Type: application/json
+
+{
+  "fechaInicio": "2020-01-01T10:00:00",
+  "fechaFin": "2020-01-02T10:00:00",
+  "motivo": "Pasado"
+}
+
+### 9.7 Crear bloqueo solapado — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
+Content-Type: application/json
+
+{
+  "fechaInicio": "2027-08-03T00:00:00",
+  "fechaFin": "2027-08-10T23:59:59",
+  "motivo": "Se solapa con el bloqueo existente"
+}
+
+### 9.8 Intentar crear turno en fecha bloqueada — 400 Bad Request
 POST {{host}}/api/profesionales/{{profesionalId}}/turnos
 Content-Type: application/json
 
 {
   "pacienteId": "{{pacienteId}}",
-  "fechaHora": "2026-12-11T15:30:00",
-  "servicioIds": ["{{servicioTurnoId}}"],
-  "observaciones": "Turno pendiente para probar validación"
+  "fechaHora": "2027-08-03T15:00:00",
+  "servicioIds": ["{{servicioId}}"]
 }
 
-> {% client.global.set("turnoPendienteId", response.body.id); %}
-
-
-### 6.11 Intentar crear sesión para turno PENDIENTE — 400 Bad Request
-POST {{host}}/api/turnos/{{turnoPendienteId}}/sesion-clinica
+### 9.9 Crear turno en fecha NO bloqueada — 201 Created
+# @name turnoLibre
+POST {{host}}/api/profesionales/{{profesionalId}}/turnos
 Content-Type: application/json
 
 {
-  "tratamiento": "No debería permitirse",
-  "respuestaTolerancia": "El turno está pendiente"
+  "pacienteId": "{{pacienteId}}",
+  "fechaHora": "2027-12-15T10:00:00",
+  "servicioIds": ["{{servicioId}}"]
 }
 
+###
 
-### 6.12 Registrar foto vinculada a sesión clínica — 201 Created
-POST {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}/fotos
+@turnoLibreId = {{turnoLibre.response.body.id}}
+
+### 9.10 Intentar crear bloqueo que contiene un turno existente — 400 Bad Request
+POST {{host}}/api/profesionales/{{profesionalId}}/bloqueos-agenda
 Content-Type: application/json
 
 {
-  "sesionClinicaId": "{{sesionClinicaId}}",
-  "descripcion": "Foto antes del tratamiento, perfil derecho"
+  "fechaInicio": "2027-12-14T00:00:00",
+  "fechaFin": "2027-12-16T23:59:59",
+  "motivo": "Debe fallar porque ya hay turno agendado"
 }
 
-> {% client.global.set("fotoPacienteId", response.body.id); %}
+### 9.11 Eliminar bloqueo — 204 No Content
+DELETE {{host}}/api/bloqueos-agenda/{{bloqueoId}}
 
+### ============================================================
+### 10. CASOS DE ERROR ADICIONALES
+### ============================================================
 
-### 6.13 Listar fotos por paciente — 200 OK
-GET {{host}}/api/pacientes/{{pacienteId}}/fotos
+### 10.1 Buscar paciente inexistente — 404 Not Found
+GET {{host}}/api/pacientes/00000000-0000-0000-0000-000000000000
 
+### 10.2 UUID malformado — 400 Bad Request
+GET {{host}}/api/turnos/no-es-un-uuid
 
-### 6.14 Listar fotos por sesión clínica — 200 OK
-GET {{host}}/api/sesiones-clinicas/{{sesionClinicaId}}/fotos
-
-
-### 6.15 Eliminar foto — 204 No Content
-DELETE {{host}}/api/fotos/{{fotoPacienteId}}
-
-
+### 10.3 Estado inválido al cambiar turno — 400 Bad Request
+PATCH {{host}}/api/turnos/{{turnoMultipleId}}/estado?nuevoEstado=ESTADO_INEXISTENTE

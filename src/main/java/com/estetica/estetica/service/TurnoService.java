@@ -3,6 +3,7 @@ package com.estetica.estetica.service;
 import com.estetica.estetica.dto.request.TurnoRequest;
 import com.estetica.estetica.dto.response.TurnoResponse;
 import com.estetica.estetica.model.*;
+import com.estetica.estetica.repository.BloqueoAgendaRepository;
 import com.estetica.estetica.repository.PacienteRepository;
 import com.estetica.estetica.repository.ProfesionalRepository;
 import com.estetica.estetica.repository.ServicioRepository;
@@ -29,6 +30,7 @@ public class TurnoService {
     private final ProfesionalRepository profesionalRepository;
     private final PacienteRepository pacienteRepository;
     private final ServicioRepository servicioRepository;
+    private final BloqueoAgendaRepository bloqueoAgendaRepository;
 
     @Transactional
     public TurnoResponse crear(UUID profesionalId, TurnoRequest request) {
@@ -81,10 +83,10 @@ public class TurnoService {
             }
         }
 
-        // TODO: validar que la fechaHora no caiga en un rango de BloqueoAgenda
-        // cuando se implemente esa entidad (sprint posterior).
+        // 5. Validar que la fecha no esté bloqueada en la agenda de la profesional
+        validarFechaNoBloqueada(profesionalId, request.getFechaHora());
 
-        // 5. Construir el turno (sin TurnoServicio todavía, necesitamos el ID)
+        // 6. Construir el turno (sin TurnoServicio todavía, necesitamos el ID)
         Turno turno = Turno.builder()
                 .profesional(profesional)
                 .paciente(paciente)
@@ -95,7 +97,7 @@ public class TurnoService {
                 .turnoServicios(new ArrayList<>())
                 .build();
 
-        // 6. Crear los TurnoServicio con el precio congelado y calcular monto total
+        // 7. Crear los TurnoServicio con el precio congelado y calcular monto total
         BigDecimal montoTotal = BigDecimal.ZERO;
         for (Servicio s : servicios) {
             TurnoServicio ts = TurnoServicio.builder()
@@ -196,6 +198,22 @@ public class TurnoService {
         if (!profesionalRepository.existsById(profesionalId)) {
             throw new EntityNotFoundException("No se encontró la profesional con ID: " + profesionalId);
         }
+    }
+
+    private void validarFechaNoBloqueada(UUID profesionalId, LocalDateTime fechaHora) {
+        bloqueoAgendaRepository
+                .findFirstByProfesionalIdAndFechaInicioLessThanEqualAndFechaFinGreaterThan(
+                        profesionalId,
+                        fechaHora,
+                        fechaHora
+                )
+                .ifPresent(bloqueo -> {
+                    String mensaje = "La fecha del turno está bloqueada en la agenda de la profesional";
+                    if (bloqueo.getMotivo() != null && !bloqueo.getMotivo().isBlank()) {
+                        mensaje += ". Motivo: " + bloqueo.getMotivo();
+                    }
+                    throw new IllegalArgumentException(mensaje);
+                });
     }
 
     private TurnoResponse toResponse(Turno turno) {

@@ -19,4 +19,11 @@ public interface TurnoRepository extends JpaRepository<Turno, UUID> {
     List<Turno> findByPacienteId(UUID pacienteId);
 
     List<Turno> findByProfesionalIdAndFechaHoraBetween(UUID profesionalId, LocalDateTime desde, LocalDateTime hasta);
+
+    long countByProfesionalIdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanAndEstadoNot(
+            UUID profesionalId,
+            LocalDateTime desde,
+            LocalDateTime hasta,
+            EstadoTurno estado
+    );
 }
