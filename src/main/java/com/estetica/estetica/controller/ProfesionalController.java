@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,22 +23,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/profesionales")
 @RequiredArgsConstructor
-@Tag(name = "Profesionales", description = "Operaciones para crear, consultar, actualizar y eliminar profesionales.")
+@Tag(name = "Profesionales", description = "Operaciones para consultar, actualizar y eliminar profesionales. La creación inicial se realiza por seeder.")
 public class ProfesionalController {
 
     private final ProfesionalService profesionalService;
 
-    @PostMapping
-    @Operation(summary = "Crear profesional", description = "Registra una nueva profesional. El email debe ser único.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Profesional creada correctamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o email duplicado",
-                    content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class})))
-    })
-    public ResponseEntity<ProfesionalResponse> crear(@Valid @RequestBody ProfesionalRequest request) {
-        ProfesionalResponse response = profesionalService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar profesional por ID", description = "Devuelve los datos de una profesional a partir de su UUID.")

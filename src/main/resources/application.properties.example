@@ -7,3 +7,5 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
+jwt.secret=TU_CLAVE_SECRETA_BASE64_DE_AL_MENOS_256_BITS_AQUI
+jwt.expiration=28800000

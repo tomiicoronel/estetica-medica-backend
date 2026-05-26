@@ -59,6 +59,16 @@ public class Profesional {
     @Column(name = "especialidad", length = 100)
     private String especialidad;
 
+    @Schema(description = "Hash BCrypt de la contraseña de la profesional. Nunca se expone en respuestas.", accessMode = Schema.AccessMode.WRITE_ONLY)
+    @Column(name = "password", length = 255)
+    private String password;
+
+    @Schema(description = "Rol de seguridad de la profesional", example = "PROFESIONAL")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rol", length = 30)
+    @Builder.Default
+    private RolUsuario rol = RolUsuario.PROFESIONAL;
+
     @Schema(description = "Servicios creados por la profesional")
     @OneToMany(mappedBy = "profesional", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -79,6 +89,9 @@ public class Profesional {
 
     @PrePersist
     protected void onCreate() {
+        if (this.rol == null) {
+            this.rol = RolUsuario.PROFESIONAL;
+        }
         this.creadoEn = LocalDateTime.now();
         this.actualizadoEn = LocalDateTime.now();
     }
