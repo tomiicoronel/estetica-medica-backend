@@ -1,49 +1,106 @@
 # Sistema de Gestión para Profesionales de Estética
 
-## ¿Qué es esta aplicación?
+## Presentación general
 
-Esta aplicación es una herramienta pensada para profesionales de estética que necesitan organizar su trabajo diario en un solo lugar: pacientes, turnos, servicios, fichas clínicas, sesiones, fotos de evolución, pagos y bloqueos de agenda.
+Esta aplicación es un sistema de gestión pensado para profesionales de estética que necesitan organizar su trabajo diario de manera clara, segura y profesional.
 
-El objetivo es que la profesional pueda administrar su consultorio de forma simple, ordenada y segura, sin depender de planillas, cuadernos, chats o recordatorios sueltos.
+Permite administrar desde un solo lugar la información más importante del negocio: pacientes, fichas clínicas, servicios, turnos, sesiones, fotos de evolución, pagos, deudas y bloqueos de agenda.
+
+La idea principal es reemplazar la información dispersa en cuadernos, planillas, mensajes de WhatsApp, notas sueltas o recordatorios manuales por una herramienta centralizada, ordenada y preparada para crecer.
 
 ---
 
-## ¿Para quién está pensada?
+## ¿Para quién sirve?
 
-Está pensada para profesionales independientes o centros de estética que quieren llevar un control más profesional de su actividad.
+La app está pensada para profesionales independientes, gabinetes o centros de estética que atienden pacientes y necesitan llevar un seguimiento organizado de su actividad.
 
-Por ejemplo:
+Puede ser útil para:
 
 - Cosmetólogas.
 - Cosmiatras.
 - Esteticistas.
-- Profesionales de tratamientos faciales y corporales.
+- Profesionales de tratamientos faciales.
+- Profesionales de tratamientos corporales.
 - Gabinetes de estética.
-- Centros pequeños o medianos que trabajan con pacientes y turnos.
+- Centros pequeños o medianos con varias profesionales.
+- Negocios que quieren ordenar pacientes, turnos, pagos e historias clínicas.
+
+También está preparada para un escenario donde varias profesionales usan el mismo sistema, pero cada una ve únicamente su propia información.
 
 ---
 
-## ¿Qué puede hacer la profesional con la app?
+## ¿Qué problema resuelve?
 
-### 1. Gestionar sus datos profesionales
+En muchos gabinetes o centros de estética, la información suele estar repartida en distintos lugares:
 
-La aplicación permite registrar profesionales con sus datos principales:
+- Los turnos en una agenda física o en Google Calendar.
+- Los pagos en una planilla o en mensajes.
+- Las fotos en la galería del celular.
+- Las fichas clínicas en papel.
+- Los precios en listas separadas.
+- Las observaciones de cada sesión en notas o chats.
 
-- Nombre.
-- Apellido.
-- Email.
-- Teléfono.
-- Especialidad.
+Esto puede generar problemas como:
 
-Cada profesional trabaja con su propia información. Esto significa que sus pacientes, servicios, turnos y fichas clínicas quedan separados de los de otras profesionales.
+- Pérdida de información importante.
+- Dificultad para saber qué tratamiento se hizo en la última sesión.
+- Confusión entre precios viejos y precios actuales.
+- Falta de control sobre pagos parciales o deudas.
+- Riesgo de agendar turnos en horarios no disponibles.
+- Fotos de evolución desordenadas.
+- Dificultad para encontrar rápidamente la ficha de una paciente.
+- Mezcla de información entre profesionales.
+
+La app resuelve estos problemas centralizando todo el flujo de trabajo en un sistema único.
 
 ---
 
-### 2. Cargar y administrar pacientes
+## Cómo funciona la app en la práctica
 
-La profesional puede registrar a sus pacientes con los datos necesarios para identificarlos y contactarlos.
+El funcionamiento está pensado para acompañar el trabajo real de una profesional de estética.
 
-Entre los datos que se pueden guardar están:
+Un flujo típico sería:
+
+1. La profesional ingresa al sistema con su usuario.
+2. Carga o consulta sus pacientes.
+3. Define los servicios que ofrece y sus precios.
+4. Crea un turno para una paciente, seleccionando uno o más servicios.
+5. El sistema calcula automáticamente el monto total del turno.
+6. Cuando el turno se realiza, registra la sesión clínica.
+7. Puede agregar fotos de evolución asociadas a esa sesión.
+8. Registra los pagos recibidos, ya sean completos, parciales, señas o trueques.
+9. Si tiene horarios no disponibles, bloquea su agenda para evitar turnos en esos rangos.
+10. Toda la información queda asociada a esa profesional y no se mezcla con la de otras.
+
+---
+
+## Módulos principales
+
+### 1. Profesionales
+
+Cada profesional tiene su propio perfil dentro del sistema.
+
+Desde ahí se organiza toda su información:
+
+- Sus pacientes.
+- Sus servicios.
+- Sus turnos.
+- Sus historias clínicas.
+- Sus sesiones.
+- Sus pagos.
+- Sus bloqueos de agenda.
+
+Esto permite que el sistema pueda ser usado por una sola profesional o por varias dentro de un mismo centro, manteniendo siempre los datos separados.
+
+En términos simples: cada profesional trabaja en su propio espacio privado.
+
+---
+
+### 2. Pacientes
+
+La app permite registrar y administrar pacientes con sus datos principales.
+
+Entre la información que se puede guardar se encuentra:
 
 - Nombre y apellido.
 - DNI o CUIT.
@@ -53,50 +110,120 @@ Entre los datos que se pueden guardar están:
 - Profesión.
 - Domicilio.
 - Obra social.
+- Número de obra social.
 - Contacto de emergencia.
 - Entidades de traslado.
 
-Además, la app permite archivar pacientes mediante baja lógica. Es decir, si una paciente ya no se atiende más, no hace falta borrar su historial: se puede marcar como inactiva y conservar la información registrada.
+Los datos básicos como nombre, apellido, DNI y teléfono ayudan a identificar y contactar a la paciente de forma rápida.
+
+Además, la app permite archivar pacientes mediante una baja lógica. Esto significa que si una paciente deja de atenderse, no hace falta borrar su historial. Se puede marcar como inactiva y conservar toda la información registrada.
+
+Esto es importante porque en estética el historial puede seguir siendo útil aunque la paciente no vuelva durante un tiempo.
 
 ---
 
-### 3. Crear servicios propios
+### 3. Servicios
 
-Cada profesional puede cargar los servicios que ofrece.
+Cada profesional puede crear su propia lista de servicios.
 
 Por ejemplo:
 
 - Limpieza facial.
 - Peeling.
 - Radiofrecuencia.
-- Botox.
 - Drenaje linfático.
 - Tratamientos corporales.
+- Tratamientos faciales.
+- Masajes.
+- Depilación.
+- Otros servicios personalizados.
 
 Para cada servicio se puede indicar:
 
 - Nombre.
 - Descripción.
 - Precio.
-- Si está activo o inactivo.
+- Estado activo o inactivo.
 
-Esto permite que la profesional tenga su propia lista de tratamientos disponibles. Si un servicio deja de ofrecerse, se puede desactivar sin perder el historial.
+Si un servicio deja de ofrecerse, no es necesario borrarlo. Se puede desactivar para que ya no figure como disponible, pero se mantiene el historial de turnos donde fue utilizado.
+
+Esto evita perder información pasada y permite mantener una lista actualizada de servicios ofrecidos.
 
 ---
 
-### 4. Manejar fichas clínicas faciales
+### 4. Turnos
+
+La app permite crear turnos asociados a una profesional, una paciente y uno o más servicios.
+
+Cada turno incluye:
+
+- Fecha y hora.
+- Paciente.
+- Servicios incluidos.
+- Estado del turno.
+- Monto total.
+- Observaciones.
+
+Los estados posibles del turno son:
+
+- Pendiente.
+- Confirmado.
+- Realizado.
+- Cancelado.
+
+Esto permite saber rápidamente en qué situación está cada atención.
+
+Por ejemplo:
+
+- Un turno recién creado puede quedar como pendiente.
+- Si la paciente confirma, pasa a confirmado.
+- Cuando se atiende, pasa a realizado.
+- Si no se concreta, puede marcarse como cancelado.
+
+La app también controla que no se creen turnos en fechas pasadas ni en horarios bloqueados por la profesional.
+
+---
+
+### 5. Varios servicios en un mismo turno
+
+Un turno puede incluir uno o varios servicios.
+
+Por ejemplo, una paciente podría reservar en una misma visita:
+
+- Limpieza facial.
+- Peeling.
+- Máscara hidratante.
+
+El sistema suma automáticamente los precios de esos servicios y calcula el monto total del turno.
+
+Además, guarda el precio que tenía cada servicio en el momento de crear el turno. Esto es importante porque si más adelante la profesional aumenta sus precios, los turnos anteriores siguen conservando el precio original.
+
+Ejemplo:
+
+- Hoy un servicio cuesta $50.000.
+- Se crea un turno con ese servicio.
+- Más adelante el servicio aumenta a $60.000.
+- El turno viejo sigue mostrando $50.000, porque ese era el precio al momento de reservarlo.
+
+Esto evita confusiones y mantiene un historial económico correcto.
+
+---
+
+### 6. Historia clínica facial
 
 La app permite crear una historia clínica facial para cada paciente.
 
-En esta ficha se pueden registrar datos importantes como:
+En esta ficha se puede registrar información como:
 
 - Antecedentes patológicos.
-- Antecedentes alérgicos.
-- Antecedentes quirúrgicos.
+- Antecedentes tóxicos.
+- Alergias.
+- Cirugías previas.
 - Antecedentes ginecológicos.
 - Medicación habitual.
 - Hábitos de exposición solar.
 - Uso de protector solar.
+- Higiene facial.
 - Tratamientos previos.
 - Examen facial.
 - Fototipo Fitzpatrick.
@@ -104,25 +231,30 @@ En esta ficha se pueden registrar datos importantes como:
 - Diagnóstico y tratamiento sugerido.
 - Observaciones posteriores.
 
-La ficha puede completarse progresivamente. Esto significa que no hace falta tener toda la información desde el primer día: se puede ir actualizando con el tiempo.
+La ficha facial puede completarse de manera progresiva. Esto significa que la profesional no está obligada a cargar toda la información desde el primer día. Puede empezar con lo disponible y actualizar la ficha a medida que avanza el tratamiento.
+
+Esto refleja mejor la realidad del trabajo profesional, donde muchas veces la información clínica se completa con el tiempo.
 
 ---
 
-### 5. Manejar fichas clínicas corporales
+### 7. Historia clínica corporal
 
-Además de la ficha facial, la aplicación permite cargar una historia clínica corporal.
+Además de la ficha facial, el sistema permite registrar una historia clínica corporal.
 
-En esta ficha se pueden registrar datos como:
+Esta ficha puede incluir:
 
 - Antecedentes de salud.
 - Alergias.
 - Cirugías previas.
 - Embarazo o lactancia.
-- Hábitos de alimentación.
+- Hábitos alimenticios.
 - Consumo de agua.
 - Actividad física o sedentarismo.
+- Ortostatismo prolongado.
+- Uso de medias de compresión.
 - Tratamientos corporales previos.
-- Presencia de várices, celulitis, flacidez o estrías.
+- Presencia de arañas vasculares, telangiectasias, várices, celulitis, flacidez o estrías.
+- Adiposidad localizada.
 - Peso actual.
 - Peso habitual.
 - IMC.
@@ -130,232 +262,273 @@ En esta ficha se pueden registrar datos como:
 - Diagnóstico y tratamiento.
 - Observaciones posteriores.
 
-Esto ayuda a tener un seguimiento más completo de los tratamientos corporales.
+Esto ayuda a realizar un seguimiento más completo de tratamientos corporales y a conservar información relevante para futuras sesiones.
 
 ---
 
-### 6. Crear y administrar turnos
+### 8. Sesiones clínicas
 
-La profesional puede crear turnos asociados a:
+Cuando un turno ya fue realizado, la profesional puede registrar la sesión clínica correspondiente.
 
-- Una profesional.
-- Una paciente.
-- Uno o más servicios.
-- Una fecha y hora.
-- Observaciones opcionales.
-
-Los turnos pueden tener distintos estados:
-
-- Pendiente.
-- Confirmado.
-- Realizado.
-- Cancelado.
-
-Esto permite saber fácilmente en qué situación está cada turno.
-
----
-
-### 7. Incluir varios servicios en un mismo turno
-
-Un turno puede tener uno o más servicios.
-
-Por ejemplo, una paciente puede reservar en el mismo turno:
-
-- Limpieza facial.
-- Peeling.
-- Máscara hidratante.
-
-La app calcula el monto total del turno sumando los servicios incluidos.
-
-Además, el precio queda congelado al momento de crear el turno. Esto significa que si más adelante cambia el precio de un servicio, el turno viejo conserva el precio que tenía cuando fue creado.
-
----
-
-### 8. Registrar sesiones clínicas
-
-Cuando un turno fue realizado, la profesional puede registrar la sesión clínica correspondiente.
-
-En cada sesión se puede guardar:
+En cada sesión se guarda:
 
 - Número de sesión.
 - Tratamiento realizado.
 - Respuesta y tolerancia de la paciente.
 - Observaciones.
 
-Esto permite llevar un historial ordenado de lo que se hizo en cada visita.
+El número de sesión se calcula automáticamente, lo que permite llevar un orden dentro del tratamiento de cada paciente.
+
+Esto es útil para responder preguntas como:
+
+- ¿Qué se hizo en la última sesión?
+- ¿Cómo respondió la paciente?
+- ¿Hubo alguna reacción?
+- ¿Qué observaciones se dejaron para la próxima visita?
+
+La sesión clínica transforma cada turno realizado en una parte del historial de tratamiento.
 
 ---
 
-### 9. Guardar fotos de evolución
+### 9. Fotos de evolución
 
 La app permite vincular fotos de una paciente a una sesión clínica.
 
-Esto sirve para hacer seguimiento visual de la evolución de los tratamientos.
+Esto sirve para hacer seguimiento visual de los resultados.
 
-Por ejemplo:
+Algunos usos posibles:
 
 - Fotos antes y después.
 - Seguimiento de manchas.
+- Evolución de tratamientos faciales.
 - Evolución de tratamientos corporales.
-- Cambios visibles entre sesiones.
+- Comparación entre sesiones.
+- Registro visual del progreso.
 
-Por ahora, la app guarda la ruta de la imagen. En una etapa posterior se puede integrar con servicios de almacenamiento como la nube.
+En esta primera versión, el sistema guarda la ruta de la imagen. Más adelante puede integrarse con servicios de almacenamiento en la nube.
+
+El beneficio principal es que las fotos quedan relacionadas con la paciente y con la sesión correspondiente, en vez de quedar perdidas en la galería del celular.
 
 ---
 
-### 10. Registrar pagos
+### 10. Pagos
 
-La profesional puede registrar pagos asociados a cada turno.
+La app permite registrar pagos asociados a los turnos.
 
-Los métodos de pago disponibles son:
+Los métodos de pago contemplados son:
 
 - Efectivo.
 - Transferencia.
 - Mercado Pago.
 - Trueque.
 
-La app también permite marcar si un pago corresponde a una seña.
+También se puede indicar si un pago corresponde a una seña.
+
+Cada pago queda asociado a un turno, lo que permite saber cuánto se pagó, cuándo se pagó y con qué método.
 
 ---
 
-### 11. Manejar pagos parciales y deuda
+### 11. Pagos parciales, combinados y deuda
 
-Un turno puede pagarse en una o varias partes.
+Un turno no necesariamente se paga de una sola vez. La app permite registrar varios pagos para un mismo turno.
 
 Por ejemplo:
 
 - Una parte en efectivo.
 - Otra parte por transferencia.
+- Una seña anticipada.
+- El saldo restante el día del turno.
 
-Esto permite representar pagos combinados sin complicaciones.
+De esta forma, un pago combinado no necesita un tipo especial. Simplemente se registra cada parte por separado.
 
-La app calcula automáticamente:
+El sistema calcula automáticamente:
 
 - Monto total del turno.
 - Monto pagado.
 - Deuda pendiente.
 - Si todavía queda deuda o no.
 
-También evita que se registre un pago mayor al monto total del turno.
+También evita registrar pagos que superen el monto total del turno.
+
+Esto ayuda a tener un control claro de la parte económica y reduce errores administrativos.
 
 ---
 
-### 12. Registrar pagos por trueque
+### 12. Trueques
 
-Si una profesional acepta un trueque como forma de pago, puede registrarlo dentro del sistema.
+La app contempla el trueque como forma de pago.
 
-En ese caso, se puede dejar una descripción del acuerdo.
+Si una profesional acepta un intercambio, puede registrarlo y dejar detallado en qué consiste.
 
 Por ejemplo:
 
-- “Intercambio por sesión de fotografía”.
-- “Intercambio por productos”.
-- “Intercambio por servicio profesional”.
+- Intercambio por productos.
+- Intercambio por sesión de fotos.
+- Intercambio por otro servicio profesional.
 
-Esto permite que el trueque quede documentado y no dependa de la memoria o de mensajes externos.
+Esto permite que el acuerdo quede documentado dentro del sistema y no dependa solamente de la memoria o de mensajes externos.
 
 ---
 
-### 13. Bloquear horarios de agenda
+### 13. Bloqueos de agenda
 
-La profesional puede bloquear rangos de horario en su agenda.
+La profesional puede bloquear rangos de fecha y hora en los que no está disponible.
 
 Por ejemplo:
 
-- No trabaja de 14:00 a 16:00.
+- No atiende de 14:00 a 16:00.
 - Tiene vacaciones.
+- Tiene una capacitación.
 - Tiene un compromiso personal.
-- Tiene capacitación.
 - El consultorio está cerrado.
 
-La app impide crear turnos dentro de esos horarios bloqueados.
+Cuando existe un bloqueo, la app impide crear turnos dentro de ese rango.
 
-También evita crear un bloqueo si ya existen turnos vigentes dentro de ese rango, para que la profesional primero pueda moverlos o cancelarlos.
+También evita crear un bloqueo si ya existen turnos vigentes en ese horario. En ese caso, el sistema avisa que hay turnos agendados para que la profesional pueda moverlos o cancelarlos antes.
 
----
-
-## Seguridad y organización de la información
-
-La app está pensada para que cada profesional vea y administre únicamente sus propios datos.
-
-Esto es importante porque:
-
-- Los pacientes no se comparten entre profesionales.
-- Los servicios no se comparten entre profesionales.
-- Los turnos pertenecen a una sola profesional.
-- Las fichas clínicas quedan asociadas a la paciente correspondiente.
-
-Este diseño ayuda a mantener la información ordenada y preparada para crecer en el futuro.
+Esto ayuda a evitar superposiciones y errores en la agenda.
 
 ---
 
-## ¿Qué problemas resuelve?
+## Cómo se integran las funciones entre sí
 
-La aplicación ayuda a evitar problemas comunes como:
+La app no maneja cada módulo de forma aislada. Las funciones están conectadas para acompañar el flujo real de atención.
 
-- Perder datos de pacientes en chats o papeles.
-- No recordar qué tratamiento se hizo en una sesión anterior.
-- No saber cuánto pagó una paciente o cuánto debe.
-- Confundir precios antiguos con precios nuevos.
-- Agendar turnos en horarios donde la profesional no está disponible.
-- No tener fotos de evolución ordenadas.
-- Mezclar información de distintas profesionales.
+El recorrido completo sería:
+
+1. La profesional tiene su perfil y sus datos privados.
+2. Carga una paciente.
+3. Completa sus historias clínicas facial y/o corporal.
+4. Crea sus servicios con precios propios.
+5. Agenda un turno para esa paciente con uno o más servicios.
+6. El sistema calcula el total y guarda el precio de cada servicio en ese momento.
+7. Si el turno se realiza, se registra una sesión clínica.
+8. En esa sesión se describe qué tratamiento se hizo y cómo respondió la paciente.
+9. Se pueden asociar fotos de evolución a la sesión.
+10. Se registran pagos, señas, trueques o pagos parciales.
+11. El sistema calcula automáticamente si queda deuda.
+12. Si la profesional no está disponible en ciertos horarios, bloquea la agenda para evitar errores.
+
+Esta integración permite que toda la información esté relacionada y sea fácil de consultar.
 
 ---
 
-## Beneficios principales
+## Seguridad y privacidad de los datos
 
-### Para la profesional
+La app está diseñada para que cada profesional vea únicamente su propia información.
 
-- Más orden en la gestión diaria.
-- Menos dependencia de cuadernos, notas o planillas.
-- Mejor seguimiento de pacientes.
-- Historial clínico más completo.
-- Control de pagos y deudas.
-- Agenda más clara.
-- Información centralizada en un solo sistema.
+Esto significa que:
 
-### Para el negocio
+- Una profesional no puede ver pacientes de otra profesional.
+- Una profesional no puede modificar servicios de otra profesional.
+- Una profesional no puede acceder a turnos ajenos.
+- Las fichas clínicas quedan protegidas dentro del espacio de cada profesional.
+- Los pagos y fotos también pertenecen a la profesional correspondiente.
+
+Este modelo es importante para centros donde trabajan varias profesionales y para cualquier negocio que quiera cuidar la privacidad de sus pacientes.
+
+En palabras simples: cada profesional tiene su propio espacio de trabajo y sus datos no se mezclan con los de las demás.
+
+---
+
+## Beneficios para la profesional
+
+La aplicación ayuda a la profesional a trabajar con más orden y menos carga administrativa.
+
+Beneficios principales:
+
+- Tener toda la información en un solo lugar.
+- Encontrar rápidamente datos de pacientes.
+- Consultar fichas clínicas cuando sea necesario.
+- Saber qué tratamiento se realizó en cada sesión.
+- Comparar fotos de evolución.
+- Controlar pagos y deudas.
+- Evitar errores de agenda.
+- Mantener precios históricos correctos.
+- Archivar pacientes sin borrar información.
+- Reducir la dependencia de papel, planillas y chats.
+
+---
+
+## Beneficios para el negocio
+
+Además de ayudar en el día a día, el sistema mejora la organización general del negocio.
+
+Aporta:
 
 - Imagen más profesional.
-- Mejor organización interna.
+- Mejor seguimiento de pacientes.
 - Menos errores administrativos.
-- Mayor control sobre turnos, pagos y tratamientos.
-- Base preparada para crecer con nuevas funciones.
+- Mayor control económico.
+- Mayor seguridad sobre la información.
+- Mejor trazabilidad de tratamientos.
+- Base ordenada para crecer en el futuro.
+
+Para un centro de estética, esto permite pasar de una gestión informal a una gestión más profesional y escalable.
+
+---
+
+## Ejemplo simple de uso
+
+Una profesional atiende a una paciente nueva.
+
+Primero la carga en el sistema con sus datos básicos. Luego completa su historia clínica facial, anotando antecedentes, alergias, hábitos y diagnóstico inicial.
+
+Después crea un servicio llamado “Limpieza facial profunda” con su precio. Agenda un turno para esa paciente y selecciona ese servicio.
+
+Cuando llega el día del turno, marca el turno como realizado y registra la sesión clínica: qué tratamiento hizo, cómo respondió la paciente y qué observaciones quedaron.
+
+También puede agregar fotos de evolución y registrar si la paciente pagó completo, dejó una seña o quedó con una deuda pendiente.
+
+Si la profesional sabe que el viernes de 14:00 a 16:00 no va a atender, bloquea ese horario para que no se creen turnos ahí.
+
+Todo queda guardado y conectado: paciente, ficha clínica, turno, sesión, fotos y pagos.
+
+---
+
+## Qué incluye esta versión
+
+Esta versión permite gestionar:
+
+- Profesionales con acceso seguro.
+- Pacientes.
+- Servicios.
+- Turnos.
+- Historias clínicas faciales.
+- Historias clínicas corporales.
+- Sesiones clínicas.
+- Fotos de pacientes asociadas a sesiones.
+- Pagos, señas, pagos parciales, deudas y trueques.
+- Bloqueos de agenda.
+- Separación segura de información entre profesionales.
 
 ---
 
 ## Qué no incluye esta primera versión
 
-Esta versión está enfocada en la gestión interna de la profesional.
+Esta primera versión está enfocada en la gestión interna de la profesional.
 
 Por ahora, no incluye:
 
-- Aplicación para pacientes.
+- App para pacientes.
 - Agenda online para que las pacientes saquen turno solas.
 - Recordatorios automáticos por WhatsApp o email.
 - Integración con Google Calendar.
 - Facturación electrónica.
-- Reportes avanzados o estadísticas.
-- Pagos automáticos integrados.
+- Reportes avanzados o estadísticas comerciales.
+- Cobros automáticos integrados.
+- Almacenamiento real de imágenes en la nube.
 
-Estas funciones pueden agregarse en futuras etapas.
+Estas funciones pueden agregarse en futuras etapas según las necesidades del negocio.
 
 ---
 
-## Resumen simple
+## Resumen final para clientes
 
-Esta app permite que una profesional de estética pueda:
+Esta app ayuda a profesionales de estética a ordenar y profesionalizar su trabajo diario.
 
-1. Registrar pacientes.
-2. Cargar sus fichas clínicas faciales y corporales.
-3. Crear sus servicios y precios.
-4. Administrar turnos.
-5. Registrar qué se hizo en cada sesión.
-6. Guardar fotos de evolución.
-7. Controlar pagos, señas, trueques y deudas.
-8. Bloquear horarios donde no atiende.
-9. Mantener toda la información organizada y separada por profesional.
+Permite administrar pacientes, fichas clínicas, servicios, turnos, sesiones, fotos, pagos y agenda desde un solo lugar.
 
-En pocas palabras: es un sistema para ordenar y profesionalizar la gestión diaria de un gabinete o centro de estética.
+Su principal valor es que conecta toda la información importante del proceso de atención: desde que una paciente se registra, hasta que realiza un tratamiento, se documenta la sesión, se guardan fotos de evolución y se controla el pago.
 
+En pocas palabras: es una herramienta para trabajar con más orden, más control y una imagen más profesional frente a las pacientes.
