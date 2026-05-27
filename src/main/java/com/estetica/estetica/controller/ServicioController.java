@@ -29,49 +29,42 @@ public class ServicioController {
 
     private final ServicioService servicioService;
 
-    @PostMapping("/api/profesionales/{profesionalId}/servicios")
-    @Operation(summary = "Crear servicio", description = "Crea un servicio vinculado a una profesional.")
+    @PostMapping("/api/servicios")
+    @Operation(summary = "Crear servicio", description = "Crea un servicio vinculado a la profesional autenticada.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Servicio creado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos o servicio duplicado",
                     content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ServicioResponse> crear(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId,
             @Valid @RequestBody ServicioRequest request) {
-        request.setProfesionalId(profesionalId);
         ServicioResponse response = servicioService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/servicios")
-    @Operation(summary = "Listar servicios por profesional", description = "Devuelve todos los servicios de una profesional, activos e inactivos.")
+    @GetMapping("/api/servicios")
+    @Operation(summary = "Listar servicios", description = "Devuelve todos los servicios de la profesional autenticada, activos e inactivos.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<ServicioResponse>> listarPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        List<ServicioResponse> response = servicioService.listarPorProfesional(profesionalId);
+    public ResponseEntity<List<ServicioResponse>> listarPorProfesional() {
+        List<ServicioResponse> response = servicioService.listarPorProfesional();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/servicios/activos")
-    @Operation(summary = "Listar servicios activos", description = "Devuelve solo los servicios activos y disponibles para agendar.")
+    @GetMapping("/api/servicios/activos")
+    @Operation(summary = "Listar servicios activos", description = "Devuelve solo los servicios activos y disponibles para agendar de la profesional autenticada.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<ServicioResponse>> listarActivosPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        List<ServicioResponse> response = servicioService.listarActivosPorProfesional(profesionalId);
+    public ResponseEntity<List<ServicioResponse>> listarActivosPorProfesional() {
+        List<ServicioResponse> response = servicioService.listarActivosPorProfesional();
         return ResponseEntity.ok(response);
     }
 

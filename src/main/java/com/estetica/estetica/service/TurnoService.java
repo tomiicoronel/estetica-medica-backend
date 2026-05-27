@@ -2,12 +2,14 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.TurnoRequest;
 import com.estetica.estetica.dto.response.TurnoResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.*;
 import com.estetica.estetica.repository.BloqueoAgendaRepository;
 import com.estetica.estetica.repository.PacienteRepository;
 import com.estetica.estetica.repository.ProfesionalRepository;
 import com.estetica.estetica.repository.ServicioRepository;
 import com.estetica.estetica.repository.TurnoRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,13 +33,15 @@ public class TurnoService {
     private final PacienteRepository pacienteRepository;
     private final ServicioRepository servicioRepository;
     private final BloqueoAgendaRepository bloqueoAgendaRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
-    public TurnoResponse crear(UUID profesionalId, TurnoRequest request) {
+    public TurnoResponse crear(TurnoRequest request) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         // 1. Validar profesional
         Profesional profesional = profesionalRepository.findById(profesionalId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró la profesional con ID: " + profesionalId));
+                        "No se encontró la profesional autenticada con ID: " + profesionalId));
 
         // 2. Validar paciente y que pertenezca a la profesional
         Paciente paciente = pacienteRepository.findById(request.getPacienteId())
@@ -116,22 +120,20 @@ public class TurnoService {
 
     @Transactional(readOnly = true)
     public TurnoResponse buscarPorId(UUID id) {
-        Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró el turno con ID: " + id));
+        Turno turno = buscarEntidadPropia(id);
         return toResponse(turno);
     }
 
     @Transactional(readOnly = true)
-    public List<TurnoResponse> listarPorProfesional(UUID profesionalId) {
-        validarProfesionalExiste(profesionalId);
+    public List<TurnoResponse> listarPorProfesional() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         return turnoRepository.findByProfesionalId(profesionalId)
                 .stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<TurnoResponse> listarPorProfesionalYEstado(UUID profesionalId, EstadoTurno estado) {
-        validarProfesionalExiste(profesionalId);
+    public List<TurnoResponse> listarPorProfesionalYEstado(EstadoTurno estado) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         if (estado == null) {
             throw new IllegalArgumentException("El estado es obligatorio");
         }
@@ -140,8 +142,8 @@ public class TurnoService {
     }
 
     @Transactional(readOnly = true)
-    public List<TurnoResponse> listarPorProfesionalYRango(UUID profesionalId, LocalDateTime desde, LocalDateTime hasta) {
-        validarProfesionalExiste(profesionalId);
+    public List<TurnoResponse> listarPorProfesionalYRango(LocalDateTime desde, LocalDateTime hasta) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         if (desde == null || hasta == null) {
             throw new IllegalArgumentException("Las fechas 'desde' y 'hasta' son obligatorias");
         }
@@ -154,9 +156,9 @@ public class TurnoService {
 
     @Transactional(readOnly = true)
     public List<TurnoResponse> listarPorPaciente(UUID pacienteId) {
-        if (!pacienteRepository.existsById(pacienteId)) {
-            throw new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId);
-        }
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId));
+        validarPacientePerteneceAProfesionalAutenticada(paciente);
         return turnoRepository.findByPacienteId(pacienteId)
                 .stream().map(this::toResponse).toList();
     }
@@ -166,9 +168,7 @@ public class TurnoService {
         if (nuevoEstado == null) {
             throw new IllegalArgumentException("El nuevo estado es obligatorio");
         }
-        Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró el turno con ID: " + id));
+        Turno turno = buscarEntidadPropia(id);
 
         EstadoTurno actual = turno.getEstado();
         if (!esTransicionValida(actual, nuevoEstado)) {
@@ -193,10 +193,25 @@ public class TurnoService {
         };
     }
 
+    Turno buscarEntidadPropia(UUID id) {
+        Turno turno = turnoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró el turno con ID: " + id));
+        validarTurnoPerteneceAProfesionalAutenticada(turno);
+        return turno;
+    }
 
-    private void validarProfesionalExiste(UUID profesionalId) {
-        if (!profesionalRepository.existsById(profesionalId)) {
-            throw new EntityNotFoundException("No se encontró la profesional con ID: " + profesionalId);
+    void validarTurnoPerteneceAProfesionalAutenticada(Turno turno) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!turno.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el turno con ID: " + turno.getId());
+        }
+    }
+
+    private void validarPacientePerteneceAProfesionalAutenticada(Paciente paciente) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!paciente.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el paciente con ID: " + paciente.getId());
         }
     }
 

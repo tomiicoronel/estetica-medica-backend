@@ -4,12 +4,12 @@ import com.estetica.estetica.dto.request.ProfesionalRequest;
 import com.estetica.estetica.dto.response.ProfesionalResponse;
 import com.estetica.estetica.model.Profesional;
 import com.estetica.estetica.repository.ProfesionalRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -17,42 +17,24 @@ import java.util.UUID;
 public class ProfesionalService {
 
     private final ProfesionalRepository profesionalRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional(readOnly = true)
-    public List<ProfesionalResponse> listarTodos() {
-        return profesionalRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public ProfesionalResponse buscarPorId(UUID id) {
-        Profesional profesional = profesionalRepository.findById(id)
+    public ProfesionalResponse obtenerPerfilAutenticado() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        Profesional profesional = profesionalRepository.findById(profesionalId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró la profesional con ID: " + id));
+                        "No se encontró la profesional autenticada con ID: " + profesionalId));
         return toResponse(profesional);
     }
 
     @Transactional
-    public ProfesionalResponse crear(ProfesionalRequest request) {
-        if (profesionalRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException(
-                    "Ya existe una profesional con el email: " + request.getEmail());
-        }
-
-        Profesional profesional = toEntity(request);
-        Profesional guardado = profesionalRepository.save(profesional);
-        return toResponse(guardado);
-    }
-
-    @Transactional
-    public ProfesionalResponse actualizar(UUID id, ProfesionalRequest request) {
-        Profesional profesional = profesionalRepository.findById(id)
+    public ProfesionalResponse actualizarPerfilAutenticado(ProfesionalRequest request) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        Profesional profesional = profesionalRepository.findById(profesionalId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró la profesional con ID: " + id));
+                        "No se encontró la profesional autenticada con ID: " + profesionalId));
 
-        // Si cambió el email, verificar que no esté en uso por otra profesional
         if (!profesional.getEmail().equals(request.getEmail())
                 && profesionalRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException(
@@ -69,15 +51,6 @@ public class ProfesionalService {
         return toResponse(actualizado);
     }
 
-    @Transactional
-    public void eliminar(UUID id) {
-        if (!profesionalRepository.existsById(id)) {
-            throw new EntityNotFoundException(
-                    "No se encontró la profesional con ID: " + id);
-        }
-        profesionalRepository.deleteById(id);
-    }
-
     private ProfesionalResponse toResponse(Profesional profesional) {
         return ProfesionalResponse.builder()
                 .id(profesional.getId())
@@ -88,16 +61,6 @@ public class ProfesionalService {
                 .especialidad(profesional.getEspecialidad())
                 .creadoEn(profesional.getCreadoEn())
                 .actualizadoEn(profesional.getActualizadoEn())
-                .build();
-    }
-
-    private Profesional toEntity(ProfesionalRequest request) {
-        return Profesional.builder()
-                .nombre(request.getNombre())
-                .apellido(request.getApellido())
-                .email(request.getEmail())
-                .telefono(request.getTelefono())
-                .especialidad(request.getEspecialidad())
                 .build();
     }
 }

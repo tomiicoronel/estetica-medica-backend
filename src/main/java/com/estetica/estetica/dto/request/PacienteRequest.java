@@ -17,7 +17,7 @@ import java.util.UUID;
 @Schema(name = "PacienteRequest", description = "Datos para crear o actualizar un paciente. Nombre, apellido, DNI/CUIT y teléfono son obligatorios.")
 public class PacienteRequest {
 
-    @Schema(description = "UUID de la profesional dueña del paciente. Normalmente se completa desde el path.", example = "550e8400-e29b-41d4-a716-446655440000")
+    @Schema(description = "Campo legacy ignorado por la API. La profesional dueña se obtiene desde el token JWT.", accessMode = Schema.AccessMode.READ_ONLY)
     private UUID profesionalId;
 
     @Schema(description = "Nombre del paciente", example = "Ana", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)

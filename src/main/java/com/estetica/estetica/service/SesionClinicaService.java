@@ -2,6 +2,7 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.SesionClinicaRequest;
 import com.estetica.estetica.dto.response.SesionClinicaResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.exception.ResourceAlreadyExistsException;
 import com.estetica.estetica.model.EstadoTurno;
 import com.estetica.estetica.model.Paciente;
@@ -10,6 +11,7 @@ import com.estetica.estetica.model.Turno;
 import com.estetica.estetica.repository.PacienteRepository;
 import com.estetica.estetica.repository.SesionClinicaRepository;
 import com.estetica.estetica.repository.TurnoRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,11 +27,13 @@ public class SesionClinicaService {
     private final SesionClinicaRepository sesionClinicaRepository;
     private final TurnoRepository turnoRepository;
     private final PacienteRepository pacienteRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
     public SesionClinicaResponse crear(UUID turnoId, SesionClinicaRequest request) {
         Turno turno = turnoRepository.findById(turnoId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró el turno con ID: " + turnoId));
+        validarTurnoPerteneceAProfesionalAutenticada(turno);
 
         if (!EstadoTurno.REALIZADO.equals(turno.getEstado())) {
             throw new IllegalArgumentException("Solo se puede registrar una sesión clínica para un turno en estado REALIZADO");
@@ -56,16 +60,15 @@ public class SesionClinicaService {
 
     @Transactional(readOnly = true)
     public SesionClinicaResponse buscarPorId(UUID id) {
-        SesionClinica sesion = sesionClinicaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró la sesión clínica con ID: " + id));
+        SesionClinica sesion = buscarEntidadPropia(id);
         return toResponse(sesion);
     }
 
     @Transactional(readOnly = true)
     public SesionClinicaResponse buscarPorTurno(UUID turnoId) {
-        if (!turnoRepository.existsById(turnoId)) {
-            throw new EntityNotFoundException("No se encontró el turno con ID: " + turnoId);
-        }
+        Turno turno = turnoRepository.findById(turnoId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el turno con ID: " + turnoId));
+        validarTurnoPerteneceAProfesionalAutenticada(turno);
 
         SesionClinica sesion = sesionClinicaRepository.findByTurnoId(turnoId)
                 .orElseThrow(() -> new EntityNotFoundException("El turno con ID " + turnoId + " no tiene sesión clínica registrada"));
@@ -74,9 +77,9 @@ public class SesionClinicaService {
 
     @Transactional(readOnly = true)
     public List<SesionClinicaResponse> listarPorPaciente(UUID pacienteId) {
-        if (!pacienteRepository.existsById(pacienteId)) {
-            throw new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId);
-        }
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId));
+        validarPacientePerteneceAProfesionalAutenticada(paciente);
 
         return sesionClinicaRepository.findByTurno_Paciente_IdOrderByNumeroSesionAsc(pacienteId)
                 .stream()
@@ -86,8 +89,7 @@ public class SesionClinicaService {
 
     @Transactional
     public SesionClinicaResponse actualizar(UUID id, SesionClinicaRequest request) {
-        SesionClinica sesion = sesionClinicaRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró la sesión clínica con ID: " + id));
+        SesionClinica sesion = buscarEntidadPropia(id);
 
         sesion.setTratamiento(request.getTratamiento());
         sesion.setRespuestaTolerancia(request.getRespuestaTolerancia());
@@ -95,6 +97,27 @@ public class SesionClinicaService {
 
         SesionClinica actualizada = sesionClinicaRepository.saveAndFlush(sesion);
         return toResponse(actualizada);
+    }
+
+    private SesionClinica buscarEntidadPropia(UUID id) {
+        SesionClinica sesion = sesionClinicaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la sesión clínica con ID: " + id));
+        validarTurnoPerteneceAProfesionalAutenticada(sesion.getTurno());
+        return sesion;
+    }
+
+    private void validarTurnoPerteneceAProfesionalAutenticada(Turno turno) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!turno.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el turno con ID: " + turno.getId());
+        }
+    }
+
+    private void validarPacientePerteneceAProfesionalAutenticada(Paciente paciente) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!paciente.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el paciente con ID: " + paciente.getId());
+        }
     }
 
     private SesionClinicaResponse toResponse(SesionClinica sesion) {

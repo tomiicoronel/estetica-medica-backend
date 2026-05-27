@@ -2,11 +2,13 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.HistoriaClinicaCorporalRequest;
 import com.estetica.estetica.dto.response.HistoriaClinicaCorporalResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.exception.ResourceAlreadyExistsException;
 import com.estetica.estetica.model.HistoriaClinicaCorporal;
 import com.estetica.estetica.model.Paciente;
 import com.estetica.estetica.repository.HistoriaClinicaCorporalRepository;
 import com.estetica.estetica.repository.PacienteRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,12 +21,14 @@ public class HistoriaClinicaCorporalService {
 
     private final HistoriaClinicaCorporalRepository historiaRepository;
     private final PacienteRepository pacienteRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
     public HistoriaClinicaCorporalResponse crearFicha(UUID pacienteId, HistoriaClinicaCorporalRequest request) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró el paciente con ID: " + pacienteId));
+        validarPacientePerteneceAProfesionalAutenticada(paciente);
 
         if (historiaRepository.existsByPacienteId(pacienteId)) {
             throw new ResourceAlreadyExistsException(
@@ -40,10 +44,10 @@ public class HistoriaClinicaCorporalService {
 
     @Transactional(readOnly = true)
     public HistoriaClinicaCorporalResponse buscarPorPaciente(UUID pacienteId) {
-        if (!pacienteRepository.existsById(pacienteId)) {
-            throw new EntityNotFoundException(
-                    "No se encontró el paciente con ID: " + pacienteId);
-        }
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró el paciente con ID: " + pacienteId));
+        validarPacientePerteneceAProfesionalAutenticada(paciente);
 
         HistoriaClinicaCorporal ficha = historiaRepository.findByPacienteId(pacienteId)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -57,11 +61,19 @@ public class HistoriaClinicaCorporalService {
         HistoriaClinicaCorporal ficha = historiaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró la ficha clínica corporal con ID: " + id));
+        validarPacientePerteneceAProfesionalAutenticada(ficha.getPaciente());
 
         toEntity(ficha, request);
 
         HistoriaClinicaCorporal actualizada = historiaRepository.saveAndFlush(ficha);
         return toResponse(actualizada);
+    }
+
+    private void validarPacientePerteneceAProfesionalAutenticada(Paciente paciente) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!paciente.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el paciente con ID: " + paciente.getId());
+        }
     }
 
     // ============================================================

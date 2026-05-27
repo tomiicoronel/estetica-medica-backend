@@ -28,49 +28,42 @@ public class PacienteController {
 
     private final PacienteService pacienteService;
 
-    @PostMapping("/api/profesionales/{profesionalId}/pacientes")
-    @Operation(summary = "Crear paciente", description = "Crea un paciente asociado a una profesional. El DNI/CUIT no puede repetirse dentro de la misma profesional.")
+    @PostMapping("/api/pacientes")
+    @Operation(summary = "Crear paciente", description = "Crea un paciente asociado a la profesional autenticada. El DNI/CUIT no puede repetirse dentro de la misma profesional.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Paciente creado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos o DNI/CUIT duplicado",
                     content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<PacienteResponse> crear(
-            @Parameter(description = "UUID de la profesional dueña del paciente", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId,
             @Valid @RequestBody PacienteRequest request) {
-        request.setProfesionalId(profesionalId);
         PacienteResponse response = pacienteService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/pacientes")
-    @Operation(summary = "Listar pacientes por profesional", description = "Devuelve todos los pacientes de una profesional, activos y archivados.")
+    @GetMapping("/api/pacientes")
+    @Operation(summary = "Listar pacientes", description = "Devuelve todos los pacientes de la profesional autenticada, activos y archivados.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<PacienteResponse>> listarPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        List<PacienteResponse> response = pacienteService.listarPorProfesional(profesionalId);
+    public ResponseEntity<List<PacienteResponse>> listarPorProfesional() {
+        List<PacienteResponse> response = pacienteService.listarPorProfesional();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/pacientes/activos")
-    @Operation(summary = "Listar pacientes activos", description = "Devuelve solo los pacientes activos de una profesional.")
+    @GetMapping("/api/pacientes/activos")
+    @Operation(summary = "Listar pacientes activos", description = "Devuelve solo los pacientes activos de la profesional autenticada.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<PacienteResponse>> listarActivosPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        List<PacienteResponse> response = pacienteService.listarActivosPorProfesional(profesionalId);
+    public ResponseEntity<List<PacienteResponse>> listarActivosPorProfesional() {
+        List<PacienteResponse> response = pacienteService.listarActivosPorProfesional();
         return ResponseEntity.ok(response);
     }
 

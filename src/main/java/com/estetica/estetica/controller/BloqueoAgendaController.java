@@ -28,34 +28,30 @@ public class BloqueoAgendaController {
 
     private final BloqueoAgendaService bloqueoAgendaService;
 
-    @PostMapping("/api/profesionales/{profesionalId}/bloqueos-agenda")
-    @Operation(summary = "Crear bloqueo de agenda", description = "Crea un bloqueo horario half-open [fechaInicio, fechaFin) para una profesional. Rechaza rangos solapados o rangos con turnos ya agendados.")
+    @PostMapping("/api/bloqueos-agenda")
+    @Operation(summary = "Crear bloqueo de agenda", description = "Crea un bloqueo horario half-open [fechaInicio, fechaFin) para la profesional autenticada. Rechaza rangos solapados o rangos con turnos ya agendados.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Bloqueo creado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos, rango en pasado, solapamiento o turnos existentes en el rango",
                     content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BloqueoAgendaResponse> crear(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId,
             @Valid @RequestBody BloqueoAgendaRequest request) {
-        BloqueoAgendaResponse response = bloqueoAgendaService.crear(profesionalId, request);
+        BloqueoAgendaResponse response = bloqueoAgendaService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/bloqueos-agenda")
-    @Operation(summary = "Listar bloqueos de una profesional", description = "Devuelve todos los bloqueos de agenda de una profesional ordenados por fecha de inicio ascendente.")
+    @GetMapping("/api/bloqueos-agenda")
+    @Operation(summary = "Listar bloqueos de agenda", description = "Devuelve todos los bloqueos de agenda de la profesional autenticada ordenados por fecha de inicio ascendente.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<BloqueoAgendaResponse>> listarPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        return ResponseEntity.ok(bloqueoAgendaService.listarPorProfesional(profesionalId));
+    public ResponseEntity<List<BloqueoAgendaResponse>> listarPorProfesional() {
+        return ResponseEntity.ok(bloqueoAgendaService.listarPorProfesional());
     }
 
     @GetMapping("/api/bloqueos-agenda/{id}")

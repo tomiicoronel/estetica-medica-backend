@@ -31,35 +31,31 @@ public class TurnoController {
 
     private final TurnoService turnoService;
 
-    @PostMapping("/api/profesionales/{profesionalId}/turnos")
-    @Operation(summary = "Crear turno", description = "Crea un turno para una profesional, paciente y uno o más servicios. Congela el precio de cada servicio en el momento de creación.")
+    @PostMapping("/api/turnos")
+    @Operation(summary = "Crear turno", description = "Crea un turno para la profesional autenticada, un paciente propio y uno o más servicios propios. Congela el precio de cada servicio en el momento de creación.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Turno creado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos, fecha pasada, paciente de otra profesional o servicio inactivo",
                     content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
-            @ApiResponse(responseCode = "404", description = "Profesional, paciente o servicio no encontrado",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada, paciente o servicio no encontrado",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TurnoResponse> crear(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId,
             @Valid @RequestBody TurnoRequest request) {
-        TurnoResponse response = turnoService.crear(profesionalId, request);
+        TurnoResponse response = turnoService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/turnos")
-    @Operation(summary = "Listar turnos de una profesional", description = "Lista turnos por profesional. Permite filtrar por estado o por rango de fechas usando parámetros opcionales.")
+    @GetMapping("/api/turnos")
+    @Operation(summary = "Listar turnos", description = "Lista turnos de la profesional autenticada. Permite filtrar por estado o por rango de fechas usando parámetros opcionales.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
             @ApiResponse(responseCode = "400", description = "Filtros inválidos",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<List<TurnoResponse>> listarPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId,
             @Parameter(description = "Estado opcional para filtrar", example = "PENDIENTE", schema = @Schema(implementation = EstadoTurno.class))
             @RequestParam(required = false) EstadoTurno estado,
             @Parameter(description = "Inicio del rango de fechas en formato ISO-8601", example = "2026-04-01T00:00:00")
@@ -68,12 +64,12 @@ public class TurnoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta) {
 
         if (estado != null) {
-            return ResponseEntity.ok(turnoService.listarPorProfesionalYEstado(profesionalId, estado));
+            return ResponseEntity.ok(turnoService.listarPorProfesionalYEstado(estado));
         }
         if (desde != null || hasta != null) {
-            return ResponseEntity.ok(turnoService.listarPorProfesionalYRango(profesionalId, desde, hasta));
+            return ResponseEntity.ok(turnoService.listarPorProfesionalYRango(desde, hasta));
         }
-        return ResponseEntity.ok(turnoService.listarPorProfesional(profesionalId));
+        return ResponseEntity.ok(turnoService.listarPorProfesional());
     }
 
     @GetMapping("/api/pacientes/{pacienteId}/turnos")

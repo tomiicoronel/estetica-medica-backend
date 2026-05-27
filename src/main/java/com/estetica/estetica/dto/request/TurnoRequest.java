@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(name = "TurnoRequest", description = "Datos para crear un turno. El profesionalId se toma del path.")
+@Schema(name = "TurnoRequest", description = "Datos para crear un turno. La profesional dueña se obtiene desde el token JWT.")
 public class TurnoRequest {
 
     @Schema(description = "UUID del paciente", example = "650e8400-e29b-41d4-a716-446655440000", requiredMode = Schema.RequiredMode.REQUIRED)

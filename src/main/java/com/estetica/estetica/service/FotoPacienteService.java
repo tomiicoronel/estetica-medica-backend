@@ -2,12 +2,14 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.FotoPacienteRequest;
 import com.estetica.estetica.dto.response.FotoPacienteResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.FotoPaciente;
 import com.estetica.estetica.model.Paciente;
 import com.estetica.estetica.model.SesionClinica;
 import com.estetica.estetica.repository.FotoPacienteRepository;
 import com.estetica.estetica.repository.PacienteRepository;
 import com.estetica.estetica.repository.SesionClinicaRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class FotoPacienteService {
     private final FotoPacienteRepository fotoPacienteRepository;
     private final SesionClinicaRepository sesionClinicaRepository;
     private final PacienteRepository pacienteRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
     public FotoPacienteResponse registrar(UUID sesionId, FotoPacienteRequest request) {
@@ -33,6 +36,7 @@ public class FotoPacienteService {
 
         SesionClinica sesion = sesionClinicaRepository.findById(sesionId)
                 .orElseThrow(() -> new EntityNotFoundException("No se encontró la sesión clínica con ID: " + sesionId));
+        validarSesionPerteneceAProfesionalAutenticada(sesion);
 
         Paciente paciente = sesion.getTurno().getPaciente();
         UUID fotoArchivoId = UUID.randomUUID();
@@ -51,9 +55,9 @@ public class FotoPacienteService {
 
     @Transactional(readOnly = true)
     public List<FotoPacienteResponse> listarPorPaciente(UUID pacienteId) {
-        if (!pacienteRepository.existsById(pacienteId)) {
-            throw new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId);
-        }
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el paciente con ID: " + pacienteId));
+        validarPacientePerteneceAProfesionalAutenticada(paciente);
 
         return fotoPacienteRepository.findByPacienteId(pacienteId)
                 .stream()
@@ -63,9 +67,9 @@ public class FotoPacienteService {
 
     @Transactional(readOnly = true)
     public List<FotoPacienteResponse> listarPorSesion(UUID sesionId) {
-        if (!sesionClinicaRepository.existsById(sesionId)) {
-            throw new EntityNotFoundException("No se encontró la sesión clínica con ID: " + sesionId);
-        }
+        SesionClinica sesion = sesionClinicaRepository.findById(sesionId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la sesión clínica con ID: " + sesionId));
+        validarSesionPerteneceAProfesionalAutenticada(sesion);
 
         return fotoPacienteRepository.findBySesionClinicaId(sesionId)
                 .stream()
@@ -75,13 +79,23 @@ public class FotoPacienteService {
 
     @Transactional
     public void eliminar(UUID id) {
-        int filasEliminadas = fotoPacienteRepository.eliminarPorId(id);
-
-        if (filasEliminadas == 0) {
-            throw new EntityNotFoundException("No se encontró la foto con ID: " + id);
-        }
+        FotoPaciente foto = fotoPacienteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró la foto con ID: " + id));
+        validarPacientePerteneceAProfesionalAutenticada(foto.getPaciente());
+        fotoPacienteRepository.delete(foto);
 
         // TODO: cuando se integre almacenamiento real, eliminar también el archivo físico/S3 asociado a la foto.
+    }
+
+    private void validarSesionPerteneceAProfesionalAutenticada(SesionClinica sesion) {
+        validarPacientePerteneceAProfesionalAutenticada(sesion.getTurno().getPaciente());
+    }
+
+    private void validarPacientePerteneceAProfesionalAutenticada(Paciente paciente) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!paciente.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el paciente con ID: " + paciente.getId());
+        }
     }
 
     private String generarRutaImagen(UUID pacienteId, UUID sesionId, UUID fotoArchivoId) {

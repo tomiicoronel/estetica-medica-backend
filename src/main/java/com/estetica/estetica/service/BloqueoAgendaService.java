@@ -2,12 +2,14 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.BloqueoAgendaRequest;
 import com.estetica.estetica.dto.response.BloqueoAgendaResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.BloqueoAgenda;
 import com.estetica.estetica.model.EstadoTurno;
 import com.estetica.estetica.model.Profesional;
 import com.estetica.estetica.repository.BloqueoAgendaRepository;
 import com.estetica.estetica.repository.ProfesionalRepository;
 import com.estetica.estetica.repository.TurnoRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,12 +26,14 @@ public class BloqueoAgendaService {
     private final BloqueoAgendaRepository bloqueoAgendaRepository;
     private final ProfesionalRepository profesionalRepository;
     private final TurnoRepository turnoRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
-    public BloqueoAgendaResponse crear(UUID profesionalId, BloqueoAgendaRequest request) {
+    public BloqueoAgendaResponse crear(BloqueoAgendaRequest request) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         Profesional profesional = profesionalRepository.findById(profesionalId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró la profesional con ID: " + profesionalId));
+                        "No se encontró la profesional autenticada con ID: " + profesionalId));
 
         validarFechas(request.getFechaInicio(), request.getFechaFin());
         validarSinSolapamiento(profesionalId, request.getFechaInicio(), request.getFechaFin());
@@ -47,8 +51,8 @@ public class BloqueoAgendaService {
     }
 
     @Transactional(readOnly = true)
-    public List<BloqueoAgendaResponse> listarPorProfesional(UUID profesionalId) {
-        validarProfesionalExiste(profesionalId);
+    public List<BloqueoAgendaResponse> listarPorProfesional() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
         return bloqueoAgendaRepository.findByProfesionalIdOrderByFechaInicioAsc(profesionalId)
                 .stream()
                 .map(this::toResponse)
@@ -57,13 +61,13 @@ public class BloqueoAgendaService {
 
     @Transactional(readOnly = true)
     public BloqueoAgendaResponse buscarPorId(UUID id) {
-        BloqueoAgenda bloqueoAgenda = buscarEntidadPorId(id);
+        BloqueoAgenda bloqueoAgenda = buscarEntidadPropia(id);
         return toResponse(bloqueoAgenda);
     }
 
     @Transactional
     public BloqueoAgendaResponse actualizar(UUID id, BloqueoAgendaRequest request) {
-        BloqueoAgenda bloqueoAgenda = buscarEntidadPorId(id);
+        BloqueoAgenda bloqueoAgenda = buscarEntidadPropia(id);
         UUID profesionalId = bloqueoAgenda.getProfesional().getId();
 
         validarFechas(request.getFechaInicio(), request.getFechaFin());
@@ -80,20 +84,19 @@ public class BloqueoAgendaService {
 
     @Transactional
     public void eliminar(UUID id) {
-        BloqueoAgenda bloqueoAgenda = buscarEntidadPorId(id);
+        BloqueoAgenda bloqueoAgenda = buscarEntidadPropia(id);
         bloqueoAgendaRepository.delete(bloqueoAgenda);
     }
 
-    private BloqueoAgenda buscarEntidadPorId(UUID id) {
-        return bloqueoAgendaRepository.findById(id)
+    private BloqueoAgenda buscarEntidadPropia(UUID id) {
+        BloqueoAgenda bloqueoAgenda = bloqueoAgendaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "No se encontró el bloqueo de agenda con ID: " + id));
-    }
-
-    private void validarProfesionalExiste(UUID profesionalId) {
-        if (!profesionalRepository.existsById(profesionalId)) {
-            throw new EntityNotFoundException("No se encontró la profesional con ID: " + profesionalId);
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!bloqueoAgenda.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el bloqueo de agenda con ID: " + id);
         }
+        return bloqueoAgenda;
     }
 
     private void validarFechas(LocalDateTime fechaInicio, LocalDateTime fechaFin) {

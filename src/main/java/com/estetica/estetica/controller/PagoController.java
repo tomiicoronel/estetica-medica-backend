@@ -72,17 +72,15 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.obtenerResumen(turnoId));
     }
 
-    @GetMapping("/api/profesionales/{profesionalId}/pagos")
-    @Operation(summary = "Listar pagos de una profesional", description = "Devuelve todos los pagos asociados a turnos de una profesional. Sirve como base para reportes futuros.")
+    @GetMapping("/api/pagos")
+    @Operation(summary = "Listar pagos", description = "Devuelve todos los pagos asociados a turnos de la profesional autenticada. Sirve como base para reportes futuros.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<PagoResponse>> listarPorProfesional(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID profesionalId) {
-        return ResponseEntity.ok(pagoService.listarPorProfesional(profesionalId));
+    public ResponseEntity<List<PagoResponse>> listarPorProfesional() {
+        return ResponseEntity.ok(pagoService.listarPorProfesional());
     }
 
     @DeleteMapping("/api/pagos/{id}")

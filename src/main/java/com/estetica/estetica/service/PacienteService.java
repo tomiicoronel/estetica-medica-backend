@@ -2,10 +2,12 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.PacienteRequest;
 import com.estetica.estetica.dto.response.PacienteResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.Paciente;
 import com.estetica.estetica.model.Profesional;
 import com.estetica.estetica.repository.PacienteRepository;
 import com.estetica.estetica.repository.ProfesionalRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,13 +22,11 @@ public class PacienteService {
 
     private final PacienteRepository pacienteRepository;
     private final ProfesionalRepository profesionalRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional(readOnly = true)
-    public List<PacienteResponse> listarPorProfesional(UUID profesionalId) {
-        if (!profesionalRepository.existsById(profesionalId)) {
-            throw new EntityNotFoundException(
-                    "No se encontró la profesional con ID: " + profesionalId);
-        }
+    public List<PacienteResponse> listarPorProfesional() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
 
         return pacienteRepository.findByProfesionalId(profesionalId)
                 .stream()
@@ -35,11 +35,8 @@ public class PacienteService {
     }
 
     @Transactional(readOnly = true)
-    public List<PacienteResponse> listarActivosPorProfesional(UUID profesionalId) {
-        if (!profesionalRepository.existsById(profesionalId)) {
-            throw new EntityNotFoundException(
-                    "No se encontró la profesional con ID: " + profesionalId);
-        }
+    public List<PacienteResponse> listarActivosPorProfesional() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
 
         return pacienteRepository.findByProfesionalIdAndActivo(profesionalId, true)
                 .stream()
@@ -49,20 +46,19 @@ public class PacienteService {
 
     @Transactional(readOnly = true)
     public PacienteResponse buscarPorId(UUID id) {
-        Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró el paciente con ID: " + id));
+        Paciente paciente = buscarEntidadPropia(id);
         return toResponse(paciente);
     }
 
     @Transactional
     public PacienteResponse crear(PacienteRequest request) {
-        Profesional profesional = profesionalRepository.findById(request.getProfesionalId())
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        Profesional profesional = profesionalRepository.findById(profesionalId)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró la profesional con ID: " + request.getProfesionalId()));
+                        "No se encontró la profesional autenticada con ID: " + profesionalId));
 
         if (pacienteRepository.existsByDniCuitAndProfesionalId(
-                request.getDniCuit(), request.getProfesionalId())) {
+                request.getDniCuit(), profesionalId)) {
             throw new IllegalArgumentException(
                     "Ya existe un paciente con DNI/CUIT " + request.getDniCuit()
                     + " para esta profesional");
@@ -75,22 +71,13 @@ public class PacienteService {
 
     @Transactional
     public PacienteResponse actualizar(UUID id, PacienteRequest request) {
-        Paciente paciente = pacienteRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró el paciente con ID: " + id));
-
-        // No permitir reasignar a otra profesional
-        if (!paciente.getProfesional().getId().equals(request.getProfesionalId())) {
-            throw new IllegalArgumentException(
-                    "No se puede reasignar un paciente a otra profesional. "
-                    + "El paciente pertenece a la profesional con ID: "
-                    + paciente.getProfesional().getId());
-        }
+        Paciente paciente = buscarEntidadPropia(id);
+        UUID profesionalId = paciente.getProfesional().getId();
 
         // Si cambió el DNI/CUIT, verificar que no esté duplicado
         if (!paciente.getDniCuit().equals(request.getDniCuit())
                 && pacienteRepository.existsByDniCuitAndProfesionalId(
-                request.getDniCuit(), paciente.getProfesional().getId())) {
+                request.getDniCuit(), profesionalId)) {
             throw new IllegalArgumentException(
                     "Ya existe un paciente con DNI/CUIT " + request.getDniCuit()
                     + " para esta profesional");
@@ -119,15 +106,27 @@ public class PacienteService {
 
     @Transactional
     public void cambiarEstado(UUID id, Boolean activo) {
-        if (!pacienteRepository.existsById(id)) {
-            throw new EntityNotFoundException(
-                    "No se encontró el paciente con ID: " + id);
-        }
+        buscarEntidadPropia(id);
 
         int filasAfectadas = pacienteRepository.cambiarEstado(id, activo);
         if (filasAfectadas == 0) {
             throw new EntityNotFoundException(
                     "No se pudo actualizar el estado del paciente con ID: " + id);
+        }
+    }
+
+    Paciente buscarEntidadPropia(UUID id) {
+        Paciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "No se encontró el paciente con ID: " + id));
+        validarPerteneceAProfesionalAutenticada(paciente);
+        return paciente;
+    }
+
+    void validarPerteneceAProfesionalAutenticada(Paciente paciente) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!paciente.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el paciente con ID: " + paciente.getId());
         }
     }
 

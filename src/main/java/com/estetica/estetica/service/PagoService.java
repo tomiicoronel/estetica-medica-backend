@@ -3,13 +3,14 @@ package com.estetica.estetica.service;
 import com.estetica.estetica.dto.request.PagoRequest;
 import com.estetica.estetica.dto.response.PagoResponse;
 import com.estetica.estetica.dto.response.ResumenPagoResponse;
+import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.EstadoTurno;
 import com.estetica.estetica.model.MetodoPago;
 import com.estetica.estetica.model.Pago;
 import com.estetica.estetica.model.Turno;
 import com.estetica.estetica.repository.PagoRepository;
-import com.estetica.estetica.repository.ProfesionalRepository;
 import com.estetica.estetica.repository.TurnoRepository;
+import com.estetica.estetica.security.ProfesionalAutenticadaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,12 +27,11 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final TurnoRepository turnoRepository;
-    private final ProfesionalRepository profesionalRepository;
+    private final ProfesionalAutenticadaService profesionalAutenticadaService;
 
     @Transactional
     public PagoResponse registrar(UUID turnoId, PagoRequest request) {
-        Turno turno = turnoRepository.findById(turnoId)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el turno con ID: " + turnoId));
+        Turno turno = buscarTurnoPropio(turnoId);
 
         validarMetodo(request.getMetodo());
         validarMontoMayorACero(request.getMonto());
@@ -56,7 +56,7 @@ public class PagoService {
 
     @Transactional(readOnly = true)
     public List<PagoResponse> listarPorTurno(UUID turnoId) {
-        validarTurnoExiste(turnoId);
+        buscarTurnoPropio(turnoId);
         return pagoRepository.findByTurnoIdOrderByFechaAsc(turnoId)
                 .stream()
                 .map(this::toResponse)
@@ -65,8 +65,7 @@ public class PagoService {
 
     @Transactional(readOnly = true)
     public ResumenPagoResponse obtenerResumen(UUID turnoId) {
-        Turno turno = turnoRepository.findById(turnoId)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el turno con ID: " + turnoId));
+        Turno turno = buscarTurnoPropio(turnoId);
 
         List<PagoResponse> pagos = pagoRepository.findByTurnoIdOrderByFechaAsc(turnoId)
                 .stream()
@@ -90,10 +89,8 @@ public class PagoService {
     }
 
     @Transactional(readOnly = true)
-    public List<PagoResponse> listarPorProfesional(UUID profesionalId) {
-        if (!profesionalRepository.existsById(profesionalId)) {
-            throw new EntityNotFoundException("No se encontró la profesional con ID: " + profesionalId);
-        }
+    public List<PagoResponse> listarPorProfesional() {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
 
         return pagoRepository.findByTurno_Profesional_Id(profesionalId)
                 .stream()
@@ -103,8 +100,7 @@ public class PagoService {
 
     @Transactional
     public void eliminar(UUID id) {
-        Pago pago = pagoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("No se encontró el pago con ID: " + id));
+        Pago pago = buscarPagoPropio(id);
 
         if (EstadoTurno.REALIZADO.equals(pago.getTurno().getEstado())) {
             throw new IllegalArgumentException("No se puede eliminar un pago de un turno en estado REALIZADO");
@@ -113,9 +109,24 @@ public class PagoService {
         pagoRepository.delete(pago);
     }
 
-    private void validarTurnoExiste(UUID turnoId) {
-        if (!turnoRepository.existsById(turnoId)) {
-            throw new EntityNotFoundException("No se encontró el turno con ID: " + turnoId);
+    private Turno buscarTurnoPropio(UUID turnoId) {
+        Turno turno = turnoRepository.findById(turnoId)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el turno con ID: " + turnoId));
+        validarTurnoPerteneceAProfesionalAutenticada(turno);
+        return turno;
+    }
+
+    private Pago buscarPagoPropio(UUID id) {
+        Pago pago = pagoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("No se encontró el pago con ID: " + id));
+        validarTurnoPerteneceAProfesionalAutenticada(pago.getTurno());
+        return pago;
+    }
+
+    private void validarTurnoPerteneceAProfesionalAutenticada(Turno turno) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        if (!turno.getProfesional().getId().equals(profesionalId)) {
+            throw new AccesoNoAutorizadoException("No se encontró el turno con ID: " + turno.getId());
         }
     }
 

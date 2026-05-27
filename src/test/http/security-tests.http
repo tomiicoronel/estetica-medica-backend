@@ -1,5 +1,5 @@
 ### =====================================================
-### TESTS DE SEGURIDAD JWT - Sprint Seguridad (Parte 1)
+### TESTS DE SEGURIDAD JWT - Sprint Seguridad (Partes 1 y 2)
 ### =====================================================
 ### Compatible con Visual Studio Code + extension "REST Client"
 ### Extension recomendada: REST Client de Huachao Mao
@@ -60,33 +60,32 @@ Content-Type: application/json
 
 
 ### 5. Endpoint protegido SIN token - debe devolver 401
-GET {{host}}/api/profesionales
+GET {{host}}/api/profesionales/me
 
 
 ### 6. Endpoint protegido CON token valido - debe devolver 200
-GET {{host}}/api/profesionales
+GET {{host}}/api/profesionales/me
 Authorization: Bearer {{loginCorrecto.response.body.$.token}}
 
 
 ### 7. Endpoint protegido con token invalido - debe devolver 401
-GET {{host}}/api/profesionales
+GET {{host}}/api/profesionales/me
 Authorization: Bearer token_falso_inventado_123
 
 
 ### 8. Endpoint protegido con header malformado (sin "Bearer ") - debe devolver 401
-GET {{host}}/api/profesionales
+GET {{host}}/api/profesionales/me
 Authorization: {{loginCorrecto.response.body.$.token}}
 
 
-### 9. Buscar profesional por UUID valido pero inexistente - debe devolver 404
-GET {{host}}/api/profesionales/00000000-0000-0000-0000-000000000000
+### 9. Listar servicios con token valido - debe devolver 200
+GET {{host}}/api/servicios
 Authorization: Bearer {{loginCorrecto.response.body.$.token}}
 
 
-### 10. Buscar profesional por ID real (opcional) - debe devolver 200
-### Reemplaza el UUID por uno obtenido de la request 6 antes de ejecutar.
-# GET {{host}}/api/profesionales/REEMPLAZAR_UUID_REAL
-# Authorization: Bearer {{loginCorrecto.response.body.$.token}}
+### 10. Buscar recurso inexistente - debe devolver 404
+GET {{host}}/api/servicios/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{loginCorrecto.response.body.$.token}}
 
 
 ### 11. Swagger UI (publico, no requiere token) - debe devolver 200
@@ -104,11 +103,11 @@ GET {{host}}/v3/api-docs
 ###  3) 401 Unauthorized
 ###  4) 400 Bad Request
 ###  5) 401 Unauthorized  (mensaje: "No autenticado")
-###  6) 200 OK + lista de profesionales
+###  6) 200 OK + perfil de la profesional autenticada
 ###  7) 401 Unauthorized
 ###  8) 401 Unauthorized
-###  9) 404 Not Found
-### 10) 200 OK si reemplazaste el UUID real; si no, no ejecutar
+###  9) 200 OK + lista de servicios propia
+### 10) 404 Not Found
 ### 11) 200 OK (HTML de Swagger)
 ### 12) 200 OK (JSON OpenAPI)
 ### =====================================================

@@ -1,0 +1,83 @@
+### ============================================================
+### TEST CONCRETO DE AISLAMIENTO MULTI-TENANT ANA / MARÍA
+### Ejecutar EN ORDEN en VS Code REST Client.
+### ============================================================
+
+@host = http://localhost:8080
+@password = Password123!
+@fechaTurno = 2031-03-10T10:00:00
+
+### Paso 1: login como Ana — esperado 200
+# @name loginAnaAislamiento
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ana.lopez@estetica.local",
+  "password": "{{password}}"
+}
+
+### Paso 2: Ana crea paciente — esperado 201
+# @name crearPacienteAnaAislamiento
+POST {{host}}/api/pacientes
+Authorization: Bearer {{loginAnaAislamiento.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "nombre": "Paciente",
+  "apellido": "Aislamiento HTTP",
+  "dniCuit": "{{$timestamp}}",
+  "telefono": "3510000000"
+}
+
+### Paso 3: Ana crea servicio — esperado 201
+# @name crearServicioAnaAislamiento
+POST {{host}}/api/servicios
+Authorization: Bearer {{loginAnaAislamiento.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "nombre": "Servicio aislamiento {{$timestamp}}",
+  "descripcion": "Servicio para probar aislamiento multi-tenant",
+  "precio": 50000.00
+}
+
+### Paso 4: Ana crea turno con ese paciente y servicio — esperado 201
+# @name crearTurnoAnaAislamiento
+POST {{host}}/api/turnos
+Authorization: Bearer {{loginAnaAislamiento.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "pacienteId": "{{crearPacienteAnaAislamiento.response.body.$.id}}",
+  "fechaHora": "{{fechaTurno}}",
+  "servicioIds": ["{{crearServicioAnaAislamiento.response.body.$.id}}"],
+  "observaciones": "Turno para probar aislamiento"
+}
+
+### Paso 5: login como María — esperado 200, token distinto al de Ana
+# @name loginMariaAislamiento
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "maria.gonzalez@estetica.local",
+  "password": "{{password}}"
+}
+
+### Paso 6: María intenta ver paciente de Ana — esperado 404
+GET {{host}}/api/pacientes/{{crearPacienteAnaAislamiento.response.body.$.id}}
+Authorization: Bearer {{loginMariaAislamiento.response.body.$.token}}
+
+### Paso 7: María intenta ver turno de Ana — esperado 404
+GET {{host}}/api/turnos/{{crearTurnoAnaAislamiento.response.body.$.id}}
+Authorization: Bearer {{loginMariaAislamiento.response.body.$.token}}
+
+### Paso 8: María intenta actualizar precio de servicio de Ana — esperado 404
+PATCH {{host}}/api/servicios/{{crearServicioAnaAislamiento.response.body.$.id}}/precio?nuevoPrecio=1
+Authorization: Bearer {{loginMariaAislamiento.response.body.$.token}}
+
+### Paso 9: María lista sus pacientes — esperado 200 y NO debe incluir el id del paciente de Ana
+GET {{host}}/api/pacientes
+Authorization: Bearer {{loginMariaAislamiento.response.body.$.token}}
+

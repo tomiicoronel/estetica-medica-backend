@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,9 +17,6 @@ import java.util.UUID;
 @Schema(name = "ServicioRequest", description = "Datos para crear o actualizar un servicio de una profesional.")
 public class ServicioRequest {
 
-    @Schema(description = "UUID de la profesional dueña del servicio. Normalmente se completa desde el path.", example = "550e8400-e29b-41d4-a716-446655440000", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "El ID de la profesional es obligatorio")
-    private UUID profesionalId;
 
     @Schema(description = "Nombre del servicio", example = "Limpieza facial profunda", maxLength = 150, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El nombre del servicio es obligatorio")

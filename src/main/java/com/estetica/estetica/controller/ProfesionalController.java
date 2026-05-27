@@ -6,7 +6,6 @@ import com.estetica.estetica.dto.response.ProfesionalResponse;
 import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import com.estetica.estetica.service.ProfesionalService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,68 +16,37 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/profesionales")
 @RequiredArgsConstructor
-@Tag(name = "Profesionales", description = "Operaciones para consultar, actualizar y eliminar profesionales. La creación inicial se realiza por seeder.")
+@Tag(name = "Profesionales", description = "Operaciones para consultar y actualizar el perfil de la profesional autenticada. La creación inicial se realiza por seeder.")
 public class ProfesionalController {
 
     private final ProfesionalService profesionalService;
 
-
-    @GetMapping("/{id}")
-    @Operation(summary = "Buscar profesional por ID", description = "Devuelve los datos de una profesional a partir de su UUID.")
+    @GetMapping("/me")
+    @Operation(summary = "Obtener mi perfil", description = "Devuelve los datos de la profesional autenticada según el token JWT.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Profesional encontrada"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<ProfesionalResponse> buscarPorId(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID id) {
-        ProfesionalResponse response = profesionalService.buscarPorId(id);
+    public ResponseEntity<ProfesionalResponse> obtenerMiPerfil() {
+        ProfesionalResponse response = profesionalService.obtenerPerfilAutenticado();
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    @Operation(summary = "Listar profesionales", description = "Devuelve todas las profesionales registradas.")
-    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente")
-    public ResponseEntity<List<ProfesionalResponse>> listarTodos() {
-        List<ProfesionalResponse> response = profesionalService.listarTodos();
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar profesional", description = "Actualiza los datos de una profesional existente.")
+    @PutMapping("/me")
+    @Operation(summary = "Actualizar mi perfil", description = "Actualiza los datos de la profesional autenticada. No permite modificar perfiles de otras profesionales.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Profesional actualizada correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos o email duplicado",
                     content = @Content(schema = @Schema(oneOf = {ErrorResponse.class, ValidationErrorResponse.class}))),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<ProfesionalResponse> actualizar(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID id,
-            @Valid @RequestBody ProfesionalRequest request) {
-        ProfesionalResponse response = profesionalService.actualizar(id, request);
+    public ResponseEntity<ProfesionalResponse> actualizarMiPerfil(@Valid @RequestBody ProfesionalRequest request) {
+        ProfesionalResponse response = profesionalService.actualizarPerfilAutenticado(request);
         return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar profesional", description = "Elimina una profesional por UUID.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Profesional eliminada correctamente"),
-            @ApiResponse(responseCode = "404", description = "Profesional no encontrada",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Void> eliminar(
-            @Parameter(description = "UUID de la profesional", example = "550e8400-e29b-41d4-a716-446655440000")
-            @PathVariable UUID id) {
-        profesionalService.eliminar(id);
-        return ResponseEntity.noContent().build();
     }
 }
