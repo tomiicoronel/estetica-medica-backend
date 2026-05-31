@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(name = "RolUsuario", description = "Roles de usuario soportados por el sistema.")
 public enum RolUsuario {
+    ADMIN,
     PROFESIONAL,
     PACIENTE
 }

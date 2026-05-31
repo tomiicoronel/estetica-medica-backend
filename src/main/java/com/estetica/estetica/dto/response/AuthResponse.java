@@ -24,5 +24,8 @@ public class AuthResponse {
 
     @Schema(description = "Indica si la profesional debe cambiar su contraseña", example = "true")
     private boolean debeCambiarPassword;
+
+    @Schema(description = "Rol de la profesional autenticada", example = "PROFESIONAL")
+    private String rol;
 }
 

@@ -38,6 +38,7 @@ public class AuthService {
                 .token(jwtService.generarToken(profesional))
                 .tipoToken("Bearer")
                 .debeCambiarPassword(profesional.isDebeCambiarPassword())
+                .rol(profesional.getRol().name())
                 .build();
     }
 

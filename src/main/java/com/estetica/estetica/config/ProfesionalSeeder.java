@@ -21,22 +21,11 @@ public class ProfesionalSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (profesionalRepository.count() > 0) {
-            completarCredencialesFaltantes();
-            return;
+        completarCredencialesFaltantes();
+
+        if (!profesionalRepository.existsByRol(RolUsuario.ADMIN)) {
+            profesionalRepository.save(crearAdmin());
         }
-
-        String passwordHash = passwordEncoder.encode(PASSWORD_INICIAL);
-
-        List<Profesional> profesionalesIniciales = List.of(
-                crearProfesional("Ana", "López", "ana.lopez@estetica.local", "1123456789", "Cosmetología", passwordHash),
-                crearProfesional("María", "González", "maria.gonzalez@estetica.local", "1123456790", "Dermatología estética", passwordHash),
-                crearProfesional("Laura", "Martínez", "laura.martinez@estetica.local", "1123456791", "Estética corporal", passwordHash),
-                crearProfesional("Sofía", "Pérez", "sofia.perez@estetica.local", "1123456792", "Tratamientos faciales", passwordHash),
-                crearProfesional("Camila", "Rodríguez", "camila.rodriguez@estetica.local", "1123456793", "Depilación y aparatología", passwordHash)
-        );
-
-        profesionalRepository.saveAll(profesionalesIniciales);
     }
 
     private void completarCredencialesFaltantes() {
@@ -60,21 +49,16 @@ public class ProfesionalSeeder implements CommandLineRunner {
         }
     }
 
-    private Profesional crearProfesional(String nombre,
-                                         String apellido,
-                                         String email,
-                                         String telefono,
-                                         String especialidad,
-                                         String passwordHash) {
+    private Profesional crearAdmin() {
         return Profesional.builder()
-                .nombre(nombre)
-                .apellido(apellido)
-                .email(email)
-                .telefono(telefono)
-                .especialidad(especialidad)
-                .password(passwordHash)
+                .nombre("Admin")
+                .apellido("Sistema")
+                .email("admin@estetica.local")
+                .telefono("0000000000")
+                .especialidad("Administración")
+                .password(passwordEncoder.encode(PASSWORD_INICIAL))
                 .debeCambiarPassword(true)
-                .rol(RolUsuario.PROFESIONAL)
+                .rol(RolUsuario.ADMIN)
                 .build();
     }
 }

@@ -1,6 +1,5 @@
 package com.estetica.estetica.security;
 
-import com.estetica.estetica.model.RolUsuario;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,10 +40,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (SecurityContextHolder.getContext().getAuthentication() == null && jwtService.esTokenValido(token)) {
             UUID profesionalId = jwtService.extraerProfesionalId(token);
+            String rol = jwtService.extraerRol(token);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     profesionalId,
                     null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + RolUsuario.PROFESIONAL.name()))
+                    List.of(new SimpleGrantedAuthority("ROLE_" + rol))
             );
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);

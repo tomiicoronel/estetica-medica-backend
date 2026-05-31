@@ -1,6 +1,7 @@
 package com.estetica.estetica;
 
 import com.estetica.estetica.model.Profesional;
+import com.estetica.estetica.model.RolUsuario;
 import com.estetica.estetica.repository.ProfesionalRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AuthPasswordChangeTests {
 
     private static final String FRONTEND_ORIGIN = "http://localhost:5173";
-    private static final String EMAIL_SEEDER = "ana.lopez@estetica.local";
+    private static final String EMAIL_PROFESIONAL = "password.test@estetica.local";
     private static final String PASSWORD_INICIAL = "Password123!";
     private static final String PASSWORD_NUEVA = "PasswordNueva123!";
     private static final String MENSAJE_CAMBIO_PASSWORD = "Debe cambiar su contraseña inicial antes de usar el sistema";
@@ -41,12 +42,12 @@ class AuthPasswordChangeTests {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void prepararProfesionalSeeder() {
+    void prepararProfesionalTest() {
         restaurarPasswordInicial();
     }
 
     @AfterEach
-    void limpiarProfesionalSeeder() {
+    void limpiarProfesionalTest() {
         restaurarPasswordInicial();
     }
 
@@ -57,13 +58,14 @@ class AuthPasswordChangeTests {
                   "email": "%s",
                   "password": "%s"
                 }
-                """.formatted(EMAIL_SEEDER, PASSWORD_INICIAL));
+                """.formatted(EMAIL_PROFESIONAL, PASSWORD_INICIAL));
 
         JsonNode loginInicialBody = objectMapper.readTree(loginInicial.body());
         String token = loginInicialBody.get("token").asText();
 
         assertThat(loginInicial.statusCode()).isEqualTo(200);
         assertThat(loginInicialBody.get("debeCambiarPassword").asBoolean()).isTrue();
+        assertThat(loginInicialBody.get("rol").asText()).isEqualTo(RolUsuario.PROFESIONAL.name());
 
         HttpResponse<String> pacientesBloqueado = getAuth("/api/pacientes", token);
         JsonNode bloqueoBody = objectMapper.readTree(pacientesBloqueado.body());
@@ -101,12 +103,13 @@ class AuthPasswordChangeTests {
                   "email": "%s",
                   "password": "%s"
                 }
-                """.formatted(EMAIL_SEEDER, PASSWORD_NUEVA));
+                """.formatted(EMAIL_PROFESIONAL, PASSWORD_NUEVA));
 
         JsonNode loginFinalBody = objectMapper.readTree(loginFinal.body());
         String tokenFinal = loginFinalBody.get("token").asText();
         assertThat(loginFinal.statusCode()).isEqualTo(200);
         assertThat(loginFinalBody.get("debeCambiarPassword").asBoolean()).isFalse();
+        assertThat(loginFinalBody.get("rol").asText()).isEqualTo(RolUsuario.PROFESIONAL.name());
 
         HttpResponse<String> pacientesPermitido = getAuth("/api/pacientes", tokenFinal);
         assertThat(pacientesPermitido.statusCode()).isEqualTo(200);
@@ -132,10 +135,17 @@ class AuthPasswordChangeTests {
     }
 
     private void restaurarPasswordInicial() {
-        Profesional profesional = profesionalRepository.findByEmail(EMAIL_SEEDER)
-                .orElseThrow(() -> new IllegalStateException("No existe la profesional del seeder: " + EMAIL_SEEDER));
+        Profesional profesional = profesionalRepository.findByEmail(EMAIL_PROFESIONAL)
+                .orElseGet(() -> Profesional.builder()
+                        .nombre("Password")
+                        .apellido("Test")
+                        .email(EMAIL_PROFESIONAL)
+                        .telefono("3510000001")
+                        .especialidad("Test")
+                        .build());
         profesional.setPassword(passwordEncoder.encode(PASSWORD_INICIAL));
         profesional.setDebeCambiarPassword(true);
+        profesional.setRol(RolUsuario.PROFESIONAL);
         profesionalRepository.saveAndFlush(profesional);
     }
 

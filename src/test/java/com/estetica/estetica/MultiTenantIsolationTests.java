@@ -1,6 +1,7 @@
 package com.estetica.estetica;
 
 import com.estetica.estetica.model.Profesional;
+import com.estetica.estetica.model.RolUsuario;
 import com.estetica.estetica.repository.ProfesionalRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,14 +42,14 @@ class MultiTenantIsolationTests {
 
     @BeforeEach
     void habilitarProfesionalesParaTest() {
-        actualizarProfesionalSeeder(EMAIL_ANA, false);
-        actualizarProfesionalSeeder(EMAIL_MARIA, false);
+        actualizarProfesionalTest(EMAIL_ANA, "Ana", "López", "3510000010", false);
+        actualizarProfesionalTest(EMAIL_MARIA, "María", "González", "3510000011", false);
     }
 
     @AfterEach
     void restaurarProfesionalesSeeder() {
-        actualizarProfesionalSeeder(EMAIL_ANA, true);
-        actualizarProfesionalSeeder(EMAIL_MARIA, true);
+        actualizarProfesionalTest(EMAIL_ANA, "Ana", "López", "3510000010", true);
+        actualizarProfesionalTest(EMAIL_MARIA, "María", "González", "3510000011", true);
     }
 
     @Test
@@ -180,11 +181,24 @@ class MultiTenantIsolationTests {
         return json.get(fieldName).asText();
     }
 
-    private void actualizarProfesionalSeeder(String email, boolean debeCambiarPassword) {
+    private void actualizarProfesionalTest(
+            String email,
+            String nombre,
+            String apellido,
+            String telefono,
+            boolean debeCambiarPassword
+    ) {
         Profesional profesional = profesionalRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("No existe la profesional del seeder: " + email));
+                .orElseGet(() -> Profesional.builder()
+                        .nombre(nombre)
+                        .apellido(apellido)
+                        .email(email)
+                        .telefono(telefono)
+                        .especialidad("Test")
+                        .build());
         profesional.setPassword(passwordEncoder.encode(PASSWORD_INICIAL));
         profesional.setDebeCambiarPassword(debeCambiarPassword);
+        profesional.setRol(RolUsuario.PROFESIONAL);
         profesionalRepository.saveAndFlush(profesional);
     }
 }

@@ -30,6 +30,7 @@ public class JwtService {
                 .subject(profesional.getEmail())
                 .claim("profesionalId", profesional.getId().toString())
                 .claim("email", profesional.getEmail())
+                .claim("rol", profesional.getRol().name())
                 .issuedAt(ahora)
                 .expiration(expiracion)
                 .signWith(getSigningKey())
@@ -39,6 +40,10 @@ public class JwtService {
     public UUID extraerProfesionalId(String token) {
         String profesionalId = extraerClaims(token).get("profesionalId", String.class);
         return UUID.fromString(profesionalId);
+    }
+
+    public String extraerRol(String token) {
+        return extraerClaims(token).get("rol", String.class);
     }
 
     public boolean esTokenValido(String token) {
