@@ -1,6 +1,8 @@
 package com.estetica.estetica.config;
 
 import com.estetica.estetica.dto.response.ErrorResponse;
+import com.estetica.estetica.repository.ProfesionalRepository;
+import com.estetica.estetica.security.CambioPasswordObligatorioFilter;
 import com.estetica.estetica.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +30,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ProfesionalRepository profesionalRepository;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Bean
@@ -57,6 +60,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new CambioPasswordObligatorioFilter(profesionalRepository), JwtAuthenticationFilter.class)
                 .build();
     }
 

@@ -26,6 +26,7 @@ class AuthPasswordChangeTests {
     private static final String EMAIL_SEEDER = "ana.lopez@estetica.local";
     private static final String PASSWORD_INICIAL = "Password123!";
     private static final String PASSWORD_NUEVA = "PasswordNueva123!";
+    private static final String MENSAJE_CAMBIO_PASSWORD = "Debe cambiar su contraseña inicial antes de usar el sistema";
 
     @Value("${local.server.port}")
     private int port;
@@ -64,6 +65,11 @@ class AuthPasswordChangeTests {
         assertThat(loginInicial.statusCode()).isEqualTo(200);
         assertThat(loginInicialBody.get("debeCambiarPassword").asBoolean()).isTrue();
 
+        HttpResponse<String> pacientesBloqueado = getAuth("/api/pacientes", token);
+        JsonNode bloqueoBody = objectMapper.readTree(pacientesBloqueado.body());
+        assertThat(pacientesBloqueado.statusCode()).isEqualTo(403);
+        assertThat(bloqueoBody.get("mensaje").asText()).isEqualTo(MENSAJE_CAMBIO_PASSWORD);
+
         HttpResponse<String> preflight = optionsCors("/api/auth/cambiar-password");
         assertThat(preflight.statusCode()).isEqualTo(200);
         assertThat(preflight.headers().firstValue("Access-Control-Allow-Origin")).contains(FRONTEND_ORIGIN);
@@ -98,8 +104,12 @@ class AuthPasswordChangeTests {
                 """.formatted(EMAIL_SEEDER, PASSWORD_NUEVA));
 
         JsonNode loginFinalBody = objectMapper.readTree(loginFinal.body());
+        String tokenFinal = loginFinalBody.get("token").asText();
         assertThat(loginFinal.statusCode()).isEqualTo(200);
         assertThat(loginFinalBody.get("debeCambiarPassword").asBoolean()).isFalse();
+
+        HttpResponse<String> pacientesPermitido = getAuth("/api/pacientes", tokenFinal);
+        assertThat(pacientesPermitido.statusCode()).isEqualTo(200);
     }
 
     @Test
@@ -112,6 +122,13 @@ class AuthPasswordChangeTests {
                 """.formatted(PASSWORD_INICIAL, PASSWORD_NUEVA));
 
         assertThat(response.statusCode()).isEqualTo(401);
+    }
+
+    @Test
+    void swaggerSiguePublicoSinToken() throws Exception {
+        HttpResponse<String> response = get("/v3/api-docs");
+
+        assertThat(response.statusCode()).isEqualTo(200);
     }
 
     private void restaurarPasswordInicial() {
@@ -128,6 +145,16 @@ class AuthPasswordChangeTests {
                 .POST(HttpRequest.BodyPublishers.ofString(body));
         agregarAuthorization(builder, token);
         return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> getAuth(String path, String token) throws Exception {
+        HttpRequest.Builder builder = request(path).GET();
+        agregarAuthorization(builder, token);
+        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> get(String path) throws Exception {
+        return httpClient.send(request(path).GET().build(), HttpResponse.BodyHandlers.ofString());
     }
 
     private HttpResponse<String> optionsCors(String path) throws Exception {

@@ -13,4 +13,6 @@ public interface ProfesionalRepository extends JpaRepository<Profesional, UUID> 
     Optional<Profesional> findByEmail(String email);
 
     boolean existsByEmail(String email);
+
+    boolean existsByIdAndDebeCambiarPasswordTrue(UUID id);
 }

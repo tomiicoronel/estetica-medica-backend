@@ -1,10 +1,16 @@
 package com.estetica.estetica;
 
+import com.estetica.estetica.model.Profesional;
+import com.estetica.estetica.repository.ProfesionalRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,11 +23,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class MultiTenantIsolationTests {
 
+    private static final String PASSWORD_INICIAL = "Password123!";
+    private static final String EMAIL_ANA = "ana.lopez@estetica.local";
+    private static final String EMAIL_MARIA = "maria.gonzalez@estetica.local";
+
     @Value("${local.server.port}")
     private int port;
 
+    @Autowired
+    private ProfesionalRepository profesionalRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void habilitarProfesionalesParaTest() {
+        actualizarProfesionalSeeder(EMAIL_ANA, false);
+        actualizarProfesionalSeeder(EMAIL_MARIA, false);
+    }
+
+    @AfterEach
+    void restaurarProfesionalesSeeder() {
+        actualizarProfesionalSeeder(EMAIL_ANA, true);
+        actualizarProfesionalSeeder(EMAIL_MARIA, true);
+    }
 
     @Test
     void mariaNoPuedeAccederARecursosDeAna() throws Exception {
@@ -150,6 +178,14 @@ class MultiTenantIsolationTests {
                 .as("La respuesta debe incluir el campo '%s'. Body: %s", fieldName, result.body())
                 .isTrue();
         return json.get(fieldName).asText();
+    }
+
+    private void actualizarProfesionalSeeder(String email, boolean debeCambiarPassword) {
+        Profesional profesional = profesionalRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("No existe la profesional del seeder: " + email));
+        profesional.setPassword(passwordEncoder.encode(PASSWORD_INICIAL));
+        profesional.setDebeCambiarPassword(debeCambiarPassword);
+        profesionalRepository.saveAndFlush(profesional);
     }
 }
 
