@@ -1,5 +1,6 @@
 package com.estetica.estetica.controller;
 
+import com.estetica.estetica.dto.request.CambioPasswordRequest;
 import com.estetica.estetica.dto.request.LoginRequest;
 import com.estetica.estetica.dto.response.AuthResponse;
 import com.estetica.estetica.dto.response.ErrorResponse;
@@ -38,6 +39,20 @@ public class AuthController {
     })
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/cambiar-password")
+    @Operation(summary = "Cambiar contraseña", description = "Permite cambiar la contraseña de la profesional autenticada.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Contraseña actualizada"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos",
+                    content = @Content(schema = @Schema(implementation = ValidationErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "No autenticado o contraseña actual incorrecta",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> cambiarPassword(@Valid @RequestBody CambioPasswordRequest request) {
+        authService.cambiarPassword(request);
+        return ResponseEntity.noContent().build();
     }
 }
 

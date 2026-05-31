@@ -21,5 +21,8 @@ public class AuthResponse {
     @Schema(description = "Tipo de token", example = "Bearer")
     @Builder.Default
     private String tipoToken = "Bearer";
+
+    @Schema(description = "Indica si la profesional debe cambiar su contraseña", example = "true")
+    private boolean debeCambiarPassword;
 }
 

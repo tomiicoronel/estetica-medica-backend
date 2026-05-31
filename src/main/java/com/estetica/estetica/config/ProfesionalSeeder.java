@@ -46,6 +46,7 @@ public class ProfesionalSeeder implements CommandLineRunner {
         for (Profesional profesional : profesionales) {
             if (profesional.getPassword() == null || profesional.getPassword().isBlank()) {
                 profesional.setPassword(passwordEncoder.encode(PASSWORD_INICIAL));
+                profesional.setDebeCambiarPassword(true);
                 huboCambios = true;
             }
             if (profesional.getRol() == null) {
@@ -72,6 +73,7 @@ public class ProfesionalSeeder implements CommandLineRunner {
                 .telefono(telefono)
                 .especialidad(especialidad)
                 .password(passwordHash)
+                .debeCambiarPassword(true)
                 .rol(RolUsuario.PROFESIONAL)
                 .build();
     }

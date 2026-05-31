@@ -63,6 +63,11 @@ public class Profesional {
     @Column(name = "password", length = 255)
     private String password;
 
+    @Schema(description = "Indica si la profesional debe cambiar su contraseña", example = "true")
+    @Builder.Default
+    @Column(name = "debe_cambiar_password", nullable = false, columnDefinition = "boolean default true")
+    private boolean debeCambiarPassword = true;
+
     @Schema(description = "Rol de seguridad de la profesional", example = "PROFESIONAL")
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", length = 30)
