@@ -1,0 +1,712 @@
+# Guía para conectar el frontend con este backend
+
+Esta guía resume cómo consumir toda la API desde un frontend, especialmente desde una app React/Vite corriendo en `http://localhost:5173`.
+
+## Configuración base
+
+- **Backend local:** `http://localhost:8080`
+- **Frontend permitido por CORS:** `http://localhost:5173`
+- **Formato:** JSON
+- **Fechas:** ISO string, por ejemplo `2026-06-01T10:30:00`
+- **IDs:** UUID como string
+- **Montos:** número decimal, por ejemplo `50000.00`
+- **Auth:** JWT en header `Authorization: Bearer <token>`
+
+El backend no permite cualquier origen por CORS. Si el frontend corre en otro puerto u origen, hay que actualizar `SecurityConfig`.
+
+## Reglas globales de seguridad
+
+1. `POST /api/auth/login` es público.
+2. Swagger/OpenAPI es público: `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**`.
+3. El resto de endpoints requiere token JWT.
+4. Los endpoints `/api/admin/**` requieren rol `ADMIN`.
+5. Las cuentas `PROFESIONAL` no pueden acceder a `/api/admin/**`.
+6. No existe registro público de profesionales. Las cuentas se crean desde administración.
+7. Toda cuenta creada inicialmente queda con `debeCambiarPassword=true`.
+8. Mientras `debeCambiarPassword=true`, el backend bloquea todos los endpoints protegidos excepto:
+   - `POST /api/auth/login`
+   - `POST /api/auth/cambiar-password`
+   - `POST /api/auth/logout` si se agrega en el futuro
+
+## Flujo de autenticación recomendado
+
+### Login
+
+`POST /api/auth/login`
+
+Request:
+
+```json
+{
+  "email": "admin@estetica.local",
+  "password": "Password123!"
+}
+```
+
+Response:
+
+```json
+{
+  "token": "jwt...",
+  "tipoToken": "Bearer",
+  "debeCambiarPassword": true,
+  "rol": "ADMIN"
+}
+```
+
+Guardar en el frontend:
+
+- `token`
+- `rol`
+- `debeCambiarPassword`
+
+### Decisión después del login
+
+- Si `debeCambiarPassword === true`, redirigir siempre a la pantalla de cambio de contraseña.
+- Si `debeCambiarPassword === false` y `rol === "ADMIN"`, mostrar panel de administración.
+- Si `debeCambiarPassword === false` y `rol === "PROFESIONAL"`, mostrar la app de gestión profesional.
+
+### Cambio obligatorio de contraseña
+
+`POST /api/auth/cambiar-password`
+
+Headers:
+
+```http
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "passwordActual": "Password123!",
+  "passwordNueva": "NuevaPassword123!"
+}
+```
+
+Response: `204 No Content`
+
+Después de un `204`, el frontend puede marcar localmente `debeCambiarPassword=false` o volver a hacer login para refrescar el estado. El backend consulta la base en cada request, así que el token actual queda habilitado apenas se guarda el cambio.
+
+## Manejo de errores
+
+Error común:
+
+```json
+{
+  "timestamp": "2026-05-31T17:00:00",
+  "status": 403,
+  "error": "Acceso denegado",
+  "mensaje": "No tenés permisos para acceder a este recurso."
+}
+```
+
+Error de validación:
+
+```json
+{
+  "timestamp": "2026-05-31T17:00:00",
+  "status": 400,
+  "error": "Error de validación",
+  "mensajes": {
+    "email": "El email debe tener un formato válido",
+    "password": "La contraseña debe tener al menos 8 caracteres"
+  }
+}
+```
+
+Casos importantes para el frontend:
+
+- `401`: token ausente, inválido o vencido. Cerrar sesión y volver a login.
+- `403` con mensaje `Debe cambiar su contraseña inicial antes de usar el sistema`: redirigir a cambiar contraseña.
+- `403` con mensaje de permisos: mostrar acceso denegado.
+- `404` en recursos ajenos: puede significar que el recurso no existe o que pertenece a otra profesional. No mostrar datos de otros tenants.
+- `400`: mostrar errores de formulario.
+
+## Cliente HTTP sugerido
+
+```ts
+const API_URL = "http://localhost:8080";
+
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers ?? {})
+    }
+  });
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const data = await response.json().catch(() => undefined);
+
+  if (!response.ok) {
+    throw data ?? { status: response.status, mensaje: "Error inesperado" };
+  }
+
+  return data as T;
+}
+```
+
+## Endpoints disponibles
+
+### Auth
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/auth/login` | `LoginRequest` | `AuthResponse` | Público |
+| POST | `/api/auth/cambiar-password` | `CambioPasswordRequest` | 204 | Autenticado |
+
+### Administración
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/admin/profesionales` | `CrearProfesionalRequest` | `ProfesionalResponse` | ADMIN |
+| GET | `/api/admin/profesionales` | - | `ProfesionalResponse[]` | ADMIN |
+| PUT | `/api/admin/profesionales/{id}` | `EditarProfesionalRequest` | `ProfesionalResponse` | ADMIN |
+| POST | `/api/admin/profesionales/{id}/resetear-password` | `ResetearPasswordRequest` | 204 | ADMIN |
+| DELETE | `/api/admin/profesionales/{id}` | - | 204 | ADMIN |
+
+### Perfil profesional
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| GET | `/api/profesionales/me` | - | `ProfesionalResponse` | Autenticado |
+| PUT | `/api/profesionales/me` | `ProfesionalRequest` | `ProfesionalResponse` | Autenticado |
+
+### Pacientes
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/pacientes` | `PacienteRequest` | `PacienteResponse` | Autenticado |
+| GET | `/api/pacientes` | - | `PacienteResponse[]` | Autenticado |
+| GET | `/api/pacientes/activos` | - | `PacienteResponse[]` | Autenticado |
+| GET | `/api/pacientes/{id}` | - | `PacienteResponse` | Autenticado |
+| PUT | `/api/pacientes/{id}` | `PacienteRequest` | `PacienteResponse` | Autenticado |
+| PATCH | `/api/pacientes/{id}/estado?activo=true` | - | texto | Autenticado |
+
+No hay delete físico de pacientes. Se usa baja lógica con `activo=false`.
+
+### Servicios
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/servicios` | `ServicioRequest` | `ServicioResponse` | Autenticado |
+| GET | `/api/servicios` | - | `ServicioResponse[]` | Autenticado |
+| GET | `/api/servicios/activos` | - | `ServicioResponse[]` | Autenticado |
+| GET | `/api/servicios/{id}` | - | `ServicioResponse` | Autenticado |
+| PUT | `/api/servicios/{id}` | `ServicioRequest` | `ServicioResponse` | Autenticado |
+| PATCH | `/api/servicios/{id}/estado?activo=false` | - | texto | Autenticado |
+| PATCH | `/api/servicios/{id}/precio?nuevoPrecio=60000.00` | - | texto | Autenticado |
+
+No hay delete físico de servicios. Se activan/desactivan.
+
+### Turnos
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/turnos` | `TurnoRequest` | `TurnoResponse` | Autenticado |
+| GET | `/api/turnos` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/turnos?estado=PENDIENTE` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/turnos?desde=2026-06-01T00:00:00&hasta=2026-06-30T23:59:59` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/pacientes/{pacienteId}/turnos` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/turnos/{id}` | - | `TurnoResponse` | Autenticado |
+| PATCH | `/api/turnos/{id}/estado?nuevoEstado=REALIZADO` | - | `TurnoResponse` | Autenticado |
+
+Estados válidos: `PENDIENTE`, `CONFIRMADO`, `REALIZADO`, `CANCELADO`.
+
+### Historia clínica facial
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/pacientes/{pacienteId}/historia-clinica-facial` | `HistoriaClinicaFacialRequest` | `HistoriaClinicaFacialResponse` | Autenticado |
+| GET | `/api/pacientes/{pacienteId}/historia-clinica-facial` | - | `HistoriaClinicaFacialResponse` | Autenticado |
+| PUT | `/api/historia-clinica-facial/{id}` | `HistoriaClinicaFacialRequest` | `HistoriaClinicaFacialResponse` | Autenticado |
+
+### Historia clínica corporal
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/pacientes/{pacienteId}/historia-clinica-corporal` | `HistoriaClinicaCorporalRequest` | `HistoriaClinicaCorporalResponse` | Autenticado |
+| GET | `/api/pacientes/{pacienteId}/historia-clinica-corporal` | - | `HistoriaClinicaCorporalResponse` | Autenticado |
+| PUT | `/api/historia-clinica-corporal/{id}` | `HistoriaClinicaCorporalRequest` | `HistoriaClinicaCorporalResponse` | Autenticado |
+
+### Sesiones clínicas
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/turnos/{turnoId}/sesion-clinica` | `SesionClinicaRequest` | `SesionClinicaResponse` | Autenticado |
+| GET | `/api/turnos/{turnoId}/sesion-clinica` | - | `SesionClinicaResponse` | Autenticado |
+| GET | `/api/pacientes/{pacienteId}/sesiones-clinicas` | - | `SesionClinicaResponse[]` | Autenticado |
+| PUT | `/api/sesiones-clinicas/{id}` | `SesionClinicaRequest` | `SesionClinicaResponse` | Autenticado |
+
+### Fotos de evolución
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/sesiones-clinicas/{sesionId}/fotos` | `FotoPacienteRequest` | `FotoPacienteResponse` | Autenticado |
+| GET | `/api/pacientes/{pacienteId}/fotos` | - | `FotoPacienteResponse[]` | Autenticado |
+| GET | `/api/sesiones-clinicas/{sesionId}/fotos` | - | `FotoPacienteResponse[]` | Autenticado |
+| DELETE | `/api/fotos/{id}` | - | 204 | Autenticado |
+
+Importante: en esta versión no se sube un archivo binario real. El backend genera una `rutaImagen` lógica.
+
+### Pagos
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/turnos/{turnoId}/pagos` | `PagoRequest` | `PagoResponse` | Autenticado |
+| GET | `/api/turnos/{turnoId}/pagos` | - | `PagoResponse[]` | Autenticado |
+| GET | `/api/turnos/{turnoId}/pagos/resumen` | - | `ResumenPagoResponse` | Autenticado |
+| GET | `/api/pagos` | - | `PagoResponse[]` | Autenticado |
+| DELETE | `/api/pagos/{id}` | - | 204 | Autenticado |
+
+Métodos de pago válidos: `EFECTIVO`, `TRANSFERENCIA`, `MERCADO_PAGO`, `TRUEQUE`.
+
+### Bloqueos de agenda
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| POST | `/api/bloqueos-agenda` | `BloqueoAgendaRequest` | `BloqueoAgendaResponse` | Autenticado |
+| GET | `/api/bloqueos-agenda` | - | `BloqueoAgendaResponse[]` | Autenticado |
+| GET | `/api/bloqueos-agenda/{id}` | - | `BloqueoAgendaResponse` | Autenticado |
+| PUT | `/api/bloqueos-agenda/{id}` | `BloqueoAgendaRequest` | `BloqueoAgendaResponse` | Autenticado |
+| DELETE | `/api/bloqueos-agenda/{id}` | - | 204 | Autenticado |
+
+## DTOs principales para TypeScript
+
+```ts
+type UUID = string;
+type LocalDate = string; // "1990-05-20"
+type LocalDateTime = string; // "2026-06-01T10:30:00"
+type RolUsuario = "ADMIN" | "PROFESIONAL" | "PACIENTE";
+type EstadoTurno = "PENDIENTE" | "CONFIRMADO" | "REALIZADO" | "CANCELADO";
+type MetodoPago = "EFECTIVO" | "TRANSFERENCIA" | "MERCADO_PAGO" | "TRUEQUE";
+
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+interface AuthResponse {
+  token: string;
+  tipoToken: "Bearer";
+  debeCambiarPassword: boolean;
+  rol: "ADMIN" | "PROFESIONAL";
+}
+
+interface CambioPasswordRequest {
+  passwordActual: string;
+  passwordNueva: string; // minimo 8 caracteres
+}
+
+interface CrearProfesionalRequest {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  especialidad?: string;
+  password: string; // minimo 8 caracteres
+}
+
+interface EditarProfesionalRequest {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  especialidad?: string;
+}
+
+interface ResetearPasswordRequest {
+  passwordNueva: string; // minimo 8 caracteres
+}
+
+interface ProfesionalRequest {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  especialidad?: string;
+}
+
+interface ProfesionalResponse {
+  id: UUID;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string;
+  especialidad?: string;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface PacienteRequest {
+  // profesionalId es legacy e ignorado por la API; no hace falta enviarlo.
+  nombre: string;
+  apellido: string;
+  dniCuit: string;
+  fechaNacimiento?: LocalDate;
+  telefono: string;
+  email?: string;
+  profesion?: string;
+  domicilio?: string;
+  obraSocial?: string;
+  numeroObraSocial?: string;
+  contactoEmergenciaNombre?: string;
+  contactoEmergenciaTelefono?: string;
+  contactoEmergenciaParentesco?: string;
+  entidadTraslado1?: string;
+  entidadTraslado2?: string;
+}
+
+interface PacienteResponse extends PacienteRequest {
+  id: UUID;
+  profesionalId: UUID;
+  activo: boolean;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface ServicioRequest {
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+}
+
+interface ServicioResponse {
+  id: UUID;
+  profesionalId: UUID;
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  activo: boolean;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface TurnoRequest {
+  pacienteId: UUID;
+  fechaHora: LocalDateTime;
+  servicioIds: UUID[];
+  observaciones?: string;
+}
+
+interface TurnoServicioResponse {
+  servicioId: UUID;
+  nombre: string;
+  precioMomento: number;
+}
+
+interface TurnoResponse {
+  id: UUID;
+  profesionalId: UUID;
+  pacienteId: UUID;
+  fechaHora: LocalDateTime;
+  estado: EstadoTurno;
+  montoTotal: number;
+  observaciones?: string;
+  servicios: TurnoServicioResponse[];
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface SesionClinicaRequest {
+  tratamiento: string;
+  respuestaTolerancia?: string;
+  observaciones?: string;
+}
+
+interface SesionClinicaResponse {
+  id: UUID;
+  turnoId: UUID;
+  pacienteId: UUID;
+  profesionalId: UUID;
+  numeroSesion: number;
+  tratamiento: string;
+  respuestaTolerancia?: string;
+  observaciones?: string;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface FotoPacienteRequest {
+  sesionClinicaId: UUID; // debe coincidir con {sesionId} del path
+  descripcion?: string;
+}
+
+interface FotoPacienteResponse {
+  id: UUID;
+  pacienteId: UUID;
+  sesionClinicaId: UUID;
+  rutaImagen: string;
+  fecha: LocalDateTime;
+  descripcion?: string;
+  creadoEn: LocalDateTime;
+}
+
+interface PagoRequest {
+  metodo: MetodoPago;
+  monto: number;
+  esSena?: boolean;
+  detalleTrueque?: string;
+  fecha?: LocalDateTime;
+}
+
+interface PagoResponse {
+  id: UUID;
+  turnoId: UUID;
+  metodo: MetodoPago;
+  monto: number;
+  esSena: boolean;
+  esTrueque: boolean;
+  detalleTrueque?: string;
+  fecha: LocalDateTime;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface ResumenPagoResponse {
+  turnoId: UUID;
+  montoTotal: number;
+  montoPagado: number;
+  deuda: number;
+  tieneDeuda: boolean;
+  pagos: PagoResponse[];
+}
+
+interface BloqueoAgendaRequest {
+  fechaInicio: LocalDateTime;
+  fechaFin: LocalDateTime;
+  motivo?: string;
+}
+
+interface BloqueoAgendaResponse extends BloqueoAgendaRequest {
+  id: UUID;
+  profesionalId: UUID;
+  creadoEn: LocalDateTime;
+  actualizadoEn: LocalDateTime;
+}
+
+interface ErrorResponse {
+  timestamp: LocalDateTime;
+  status: number;
+  error: string;
+  mensaje: string;
+}
+
+interface ValidationErrorResponse {
+  timestamp: LocalDateTime;
+  status: number;
+  error: string;
+  mensajes: Record<string, string>;
+}
+```
+
+## Campos de historia clínica facial
+
+`HistoriaClinicaFacialRequest` y `HistoriaClinicaFacialResponse` usan los mismos campos; la response además incluye `id`, `pacienteId`, `creadoEn` y `actualizadoEn`.
+
+Campos disponibles:
+
+```ts
+interface HistoriaClinicaFacialRequest {
+  hta?: boolean;
+  dbt?: boolean;
+  hipotiroidismo?: boolean;
+  hipertiroidismo?: boolean;
+  anemia?: boolean;
+  enfermedadesAutoinmunes?: boolean;
+  glaucoma?: boolean;
+  enfermedadNeuromuscular?: boolean;
+  trastornosCoagulacion?: boolean;
+  alteracionCicatrizacion?: boolean;
+  marcapasos?: boolean;
+  protesisMetalica?: boolean;
+  otroAntecedentePatologico?: string;
+  tbq?: boolean;
+  alcohol?: boolean;
+  otrasToxico?: string;
+  alergicoHuevo?: boolean;
+  alergicoAnestesia?: boolean;
+  alergicoFish?: boolean;
+  otrasAlergias?: string;
+  antecedentesQuirurgicos?: string;
+  fum?: string;
+  embarazo?: boolean;
+  herpesLabial?: boolean;
+  medicacionHabitual?: string;
+  aspirinaSemana?: boolean;
+  exposicionSolar?: boolean;
+  usaProteccionSolar?: boolean;
+  proteccionSolarCual?: string;
+  proteccionSolarVecesDia?: string;
+  habitosHigieneFacial?: string;
+  tratamientoDomiciliario?: string;
+  tratamientosPrevios?: boolean;
+  tratamientosPreviosCuales?: string;
+  tratamientosPreviosRespuesta?: string;
+  viajeProximoMes?: boolean;
+  presenciaOtrosMateriales?: string;
+  secuelasTratamientosPrevios?: string;
+  seTomaFotografia?: boolean;
+  fototipoFitzpatrick?: number; // 1 a 6
+  gradoGlogau?: number; // 1 a 4
+  diagnosticoYTratamiento?: string;
+  observacionesPosteriores?: string;
+}
+```
+
+## Campos de historia clínica corporal
+
+`HistoriaClinicaCorporalRequest` y `HistoriaClinicaCorporalResponse` usan los mismos campos; la response además incluye `id`, `pacienteId`, `creadoEn` y `actualizadoEn`.
+
+Campos disponibles:
+
+```ts
+interface HistoriaClinicaCorporalRequest {
+  hta?: boolean;
+  dbt?: boolean;
+  hipotiroidismo?: boolean;
+  hipertiroidismo?: boolean;
+  anemia?: boolean;
+  enfermedadesAutoinmunes?: boolean;
+  glaucoma?: boolean;
+  enfermedadNeuromuscular?: boolean;
+  trastornosCoagulacion?: boolean;
+  alteracionCicatrizacion?: boolean;
+  marcapasos?: boolean;
+  protesisMetalica?: boolean;
+  cancer?: boolean;
+  otroAntecedentePatologico?: string;
+  tbq?: boolean;
+  alcohol?: boolean;
+  otrasToxico?: string;
+  alergicoHuevo?: boolean;
+  alergicoAnestesia?: boolean;
+  alergicoFish?: boolean;
+  otrasAlergias?: string;
+  antecedentesQuirurgicos?: string;
+  fum?: string;
+  embarazo?: boolean;
+  lactancia?: boolean;
+  herpesLabial?: boolean;
+  medicacionHabitual?: string;
+  aspirinaSemana?: boolean;
+  alimentacionSaludable?: boolean;
+  bebeAgua?: boolean;
+  sedentarismoGimnasia?: string;
+  ortostatismoProlongado?: boolean;
+  mediasCompresion?: boolean;
+  tratamientosPrevios?: boolean;
+  tratamientosPreviosCuales?: string;
+  tratamientosPreviosCuando?: string;
+  tratamientosPreviosRespuesta?: string;
+  viajeProximoMes?: boolean;
+  presenciaOtrosMateriales?: string;
+  secuelasTratamientosPrevios?: string;
+  aranasVasculares?: boolean;
+  telangiectasias?: boolean;
+  varices?: boolean;
+  celulitis?: boolean;
+  flacidez?: boolean;
+  estrias?: boolean;
+  adiposidadLocalizada?: string;
+  pesoActual?: number;
+  pesoHabitual?: number;
+  imc?: number;
+  perimetroCintura?: number;
+  seTomaFotografia?: boolean;
+  diagnosticoYTratamiento?: string;
+  observacionesPosteriores?: string;
+}
+```
+
+## Pantallas recomendadas para el frontend
+
+### Públicas
+
+- Login.
+
+### Autenticadas comunes
+
+- Cambio obligatorio de contraseña.
+- Perfil profesional.
+
+### ADMIN
+
+- Dashboard admin.
+- Listado de profesionales.
+- Crear profesional.
+- Dar de baja profesional.
+
+### PROFESIONAL
+
+- Dashboard profesional.
+- Pacientes.
+- Detalle de paciente.
+- Historia clínica facial.
+- Historia clínica corporal.
+- Servicios.
+- Agenda/turnos.
+- Sesiones clínicas.
+- Fotos de evolución.
+- Pagos y resumen de deuda.
+- Bloqueos de agenda.
+
+## Flujos clave que el frontend debe respetar
+
+### Primer ingreso del ADMIN
+
+1. Login con `admin@estetica.local`.
+2. Si `debeCambiarPassword=true`, mostrar pantalla de cambio de contraseña.
+3. Después del cambio, mostrar panel admin.
+4. Desde admin, crear profesionales.
+
+### Alta de una profesional
+
+1. ADMIN llama `POST /api/admin/profesionales`.
+2. La profesional creada queda con rol `PROFESIONAL`.
+3. La profesional creada queda con `debeCambiarPassword=true`.
+4. En su primer login, el frontend debe enviarla a cambiar contraseña.
+
+### Resetear contraseña de una profesional
+
+1. ADMIN llama `POST /api/admin/profesionales/{id}/resetear-password` con `passwordNueva`.
+2. El backend guarda la contraseña hasheada y marca `debeCambiarPassword=true`.
+3. La profesional puede iniciar sesión con la nueva contraseña.
+4. Al iniciar sesión, el frontend debe enviarla a cambiar contraseña porque `debeCambiarPassword=true`.
+
+### Trabajo diario de una profesional
+
+1. Crear paciente.
+2. Crear servicios activos.
+3. Crear turno con `pacienteId`, `fechaHora` y `servicioIds`.
+4. Cambiar estado del turno según avance.
+5. Si el turno se realiza, crear sesión clínica.
+6. Asociar fotos a la sesión si corresponde.
+7. Registrar pagos.
+8. Consultar resumen de pagos para deuda.
+9. Crear bloqueos de agenda para horarios no disponibles.
+
+## Detalles importantes para evitar errores
+
+- No enviar `rol` al crear profesionales: el backend siempre asigna `PROFESIONAL`.
+- No enviar `rol` ni `password` al editar profesionales con `PUT /api/admin/profesionales/{id}`.
+- No enviar ni mostrar `password` en responses: `ProfesionalResponse` no lo expone.
+- No implementar signup público: no existe endpoint.
+- No dejar que una profesional vea pantallas admin aunque el frontend oculte botones; el backend igualmente responderá 403.
+- No confiar en IDs de profesional enviados desde el frontend: la API usa el `profesionalId` del token.
+- En `PacienteRequest`, `profesionalId` es legacy e ignorado.
+- En fotos, `sesionClinicaId` del body debe coincidir con `{sesionId}` del path.
+- En turnos, `servicioIds` no puede estar vacío.
+- En pagos, si `metodo` es `TRUEQUE`, usar `detalleTrueque`.
+- Los recursos de otra profesional devuelven 404 para no revelar que existen.
+- Si el frontend necesita documentación viva, usar Swagger en `http://localhost:8080/swagger-ui.html`.

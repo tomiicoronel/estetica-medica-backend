@@ -15,6 +15,8 @@ public interface ProfesionalRepository extends JpaRepository<Profesional, UUID> 
 
     boolean existsByEmail(String email);
 
+    boolean existsByEmailAndIdNot(String email, UUID id);
+
     boolean existsByIdAndDebeCambiarPasswordTrue(UUID id);
 
     boolean existsByRol(RolUsuario rol);

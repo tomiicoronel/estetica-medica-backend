@@ -27,8 +27,11 @@ class AdminControllerTests {
     private static final String ADMIN_PASSWORD_INICIAL = "Password123!";
     private static final String ADMIN_PASSWORD_NUEVA = "AdminNueva123!";
     private static final String PROFESIONAL_EMAIL = "admin.creada@estetica.local";
+    private static final String PROFESIONAL_EMAIL_EDITADO = "admin.editada@estetica.local";
+    private static final String PROFESIONAL_EMAIL_DUPLICADO = "admin.duplicada@estetica.local";
     private static final String PROFESIONAL_PASSWORD_INICIAL = "Profesional123!";
     private static final String PROFESIONAL_PASSWORD_NUEVA = "ProfesionalNueva123!";
+    private static final String PROFESIONAL_PASSWORD_RESETEADA = "ProfesionalReset123!";
 
     @Value("${local.server.port}")
     private int port;
@@ -96,10 +99,53 @@ class AdminControllerTests {
         assertThat(crearProfesional.statusCode()).isEqualTo(201);
         assertThat(crearProfesionalBody.has("password")).isFalse();
         Profesional profesionalCreada = profesionalRepository.findByEmail(PROFESIONAL_EMAIL).orElseThrow();
+        String passwordHashOriginal = profesionalCreada.getPassword();
         assertThat(profesionalCreada.getRol()).isEqualTo(RolUsuario.PROFESIONAL);
         assertThat(profesionalCreada.isDebeCambiarPassword()).isTrue();
 
-        HttpResponse<String> loginProfesionalInicial = login(PROFESIONAL_EMAIL, PROFESIONAL_PASSWORD_INICIAL);
+        HttpResponse<String> crearProfesionalDuplicada = postJson("/api/admin/profesionales", tokenAdmin, """
+                {
+                  "nombre": "Profesional",
+                  "apellido": "Duplicada",
+                  "email": "%s",
+                  "telefono": "3510000022",
+                  "especialidad": "Test",
+                  "password": "%s"
+                }
+                """.formatted(PROFESIONAL_EMAIL_DUPLICADO, PROFESIONAL_PASSWORD_INICIAL));
+        assertThat(crearProfesionalDuplicada.statusCode()).isEqualTo(201);
+
+        HttpResponse<String> editarProfesional = putJson("/api/admin/profesionales/" + profesionalId, tokenAdmin, """
+                {
+                  "nombre": "Profesional Editada",
+                  "apellido": "AdminTest Editada",
+                  "email": "%s",
+                  "telefono": "3510000099",
+                  "especialidad": "Especialidad editada"
+                }
+                """.formatted(PROFESIONAL_EMAIL_EDITADO));
+        JsonNode editarProfesionalBody = objectMapper.readTree(editarProfesional.body());
+
+        assertThat(editarProfesional.statusCode()).isEqualTo(200);
+        assertThat(editarProfesionalBody.get("nombre").asText()).isEqualTo("Profesional Editada");
+        assertThat(editarProfesionalBody.get("email").asText()).isEqualTo(PROFESIONAL_EMAIL_EDITADO);
+        assertThat(editarProfesionalBody.has("password")).isFalse();
+        Profesional profesionalEditada = profesionalRepository.findByEmail(PROFESIONAL_EMAIL_EDITADO).orElseThrow();
+        assertThat(profesionalEditada.getRol()).isEqualTo(RolUsuario.PROFESIONAL);
+        assertThat(profesionalEditada.getPassword()).isEqualTo(passwordHashOriginal);
+
+        HttpResponse<String> editarConEmailDuplicado = putJson("/api/admin/profesionales/" + profesionalId, tokenAdmin, """
+                {
+                  "nombre": "Profesional Editada",
+                  "apellido": "AdminTest Editada",
+                  "email": "%s",
+                  "telefono": "3510000099",
+                  "especialidad": "Especialidad editada"
+                }
+                """.formatted(PROFESIONAL_EMAIL_DUPLICADO));
+        assertThat(editarConEmailDuplicado.statusCode()).isEqualTo(400);
+
+        HttpResponse<String> loginProfesionalInicial = login(PROFESIONAL_EMAIL_EDITADO, PROFESIONAL_PASSWORD_INICIAL);
         JsonNode loginProfesionalInicialBody = objectMapper.readTree(loginProfesionalInicial.body());
         String tokenProfesionalInicial = loginProfesionalInicialBody.get("token").asText();
 
@@ -115,7 +161,7 @@ class AdminControllerTests {
                 """.formatted(PROFESIONAL_PASSWORD_INICIAL, PROFESIONAL_PASSWORD_NUEVA));
         assertThat(cambiarPasswordProfesional.statusCode()).isEqualTo(204);
 
-        HttpResponse<String> loginProfesionalFinal = login(PROFESIONAL_EMAIL, PROFESIONAL_PASSWORD_NUEVA);
+        HttpResponse<String> loginProfesionalFinal = login(PROFESIONAL_EMAIL_EDITADO, PROFESIONAL_PASSWORD_NUEVA);
         JsonNode loginProfesionalFinalBody = objectMapper.readTree(loginProfesionalFinal.body());
         String tokenProfesional = loginProfesionalFinalBody.get("token").asText();
 
@@ -126,8 +172,44 @@ class AdminControllerTests {
         HttpResponse<String> accesoAdminComoProfesional = getAuth("/api/admin/profesionales", tokenProfesional);
         assertThat(accesoAdminComoProfesional.statusCode()).isEqualTo(403);
 
+        HttpResponse<String> editarComoProfesional = putJson("/api/admin/profesionales/" + profesionalId, tokenProfesional, """
+                {
+                  "nombre": "Intento",
+                  "apellido": "Sin Permiso",
+                  "email": "sin.permiso@estetica.local",
+                  "telefono": "3510000000",
+                  "especialidad": "No autorizada"
+                }
+                """);
+        assertThat(editarComoProfesional.statusCode()).isEqualTo(403);
+
+        HttpResponse<String> resetearComoProfesional = postJson(
+                "/api/admin/profesionales/" + profesionalId + "/resetear-password", tokenProfesional, """
+                {
+                  "passwordNueva": "%s"
+                }
+                """.formatted(PROFESIONAL_PASSWORD_RESETEADA));
+        assertThat(resetearComoProfesional.statusCode()).isEqualTo(403);
+
         HttpResponse<String> listarComoAdmin = getAuth("/api/admin/profesionales", tokenAdmin);
         assertThat(listarComoAdmin.statusCode()).isEqualTo(200);
+
+        HttpResponse<String> resetearComoAdmin = postJson(
+                "/api/admin/profesionales/" + profesionalId + "/resetear-password", tokenAdmin, """
+                {
+                  "passwordNueva": "%s"
+                }
+                """.formatted(PROFESIONAL_PASSWORD_RESETEADA));
+        assertThat(resetearComoAdmin.statusCode()).isEqualTo(204);
+
+        Profesional profesionalReseteada = profesionalRepository.findByEmail(PROFESIONAL_EMAIL_EDITADO).orElseThrow();
+        assertThat(passwordEncoder.matches(PROFESIONAL_PASSWORD_RESETEADA, profesionalReseteada.getPassword())).isTrue();
+        assertThat(profesionalReseteada.isDebeCambiarPassword()).isTrue();
+
+        HttpResponse<String> loginProfesionalReseteada = login(PROFESIONAL_EMAIL_EDITADO, PROFESIONAL_PASSWORD_RESETEADA);
+        JsonNode loginProfesionalReseteadaBody = objectMapper.readTree(loginProfesionalReseteada.body());
+        assertThat(loginProfesionalReseteada.statusCode()).isEqualTo(200);
+        assertThat(loginProfesionalReseteadaBody.get("debeCambiarPassword").asBoolean()).isTrue();
 
         HttpResponse<String> eliminarComoAdmin = deleteAuth("/api/admin/profesionales/" + profesionalId, tokenAdmin);
         assertThat(eliminarComoAdmin.statusCode()).isEqualTo(204);
@@ -159,6 +241,8 @@ class AdminControllerTests {
 
     private void eliminarProfesionalCreada() {
         profesionalRepository.findByEmail(PROFESIONAL_EMAIL).ifPresent(profesionalRepository::delete);
+        profesionalRepository.findByEmail(PROFESIONAL_EMAIL_EDITADO).ifPresent(profesionalRepository::delete);
+        profesionalRepository.findByEmail(PROFESIONAL_EMAIL_DUPLICADO).ifPresent(profesionalRepository::delete);
         profesionalRepository.flush();
     }
 
@@ -172,6 +256,14 @@ class AdminControllerTests {
 
     private HttpResponse<String> getAuth(String path, String token) throws Exception {
         HttpRequest.Builder builder = request(path).GET();
+        agregarAuthorization(builder, token);
+        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private HttpResponse<String> putJson(String path, String token, String body) throws Exception {
+        HttpRequest.Builder builder = request(path)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body));
         agregarAuthorization(builder, token);
         return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
     }

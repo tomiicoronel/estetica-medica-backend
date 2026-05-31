@@ -4,7 +4,7 @@
 
 Esta aplicación es un sistema de gestión pensado para profesionales de estética que necesitan organizar su trabajo diario de manera clara, segura y profesional.
 
-Permite administrar desde un solo lugar la información más importante del negocio: pacientes, fichas clínicas, servicios, turnos, sesiones, fotos de evolución, pagos, deudas y bloqueos de agenda.
+Permite administrar desde un solo lugar la información más importante del negocio: profesionales, accesos, pacientes, fichas clínicas, servicios, turnos, sesiones, fotos de evolución, pagos, deudas y bloqueos de agenda.
 
 La idea principal es reemplazar la información dispersa en cuadernos, planillas, mensajes de WhatsApp, notas sueltas o recordatorios manuales por una herramienta centralizada, ordenada y preparada para crecer.
 
@@ -25,7 +25,7 @@ Puede ser útil para:
 - Centros pequeños o medianos con varias profesionales.
 - Negocios que quieren ordenar pacientes, turnos, pagos e historias clínicas.
 
-También está preparada para un escenario donde varias profesionales usan el mismo sistema, pero cada una ve únicamente su propia información.
+También está preparada para un escenario donde varias profesionales usan el mismo sistema, pero cada una ve únicamente su propia información. La creación de cuentas está centralizada en una administradora del sistema, evitando registros abiertos o accesos no controlados.
 
 ---
 
@@ -50,6 +50,8 @@ Esto puede generar problemas como:
 - Fotos de evolución desordenadas.
 - Dificultad para encontrar rápidamente la ficha de una paciente.
 - Mezcla de información entre profesionales.
+- Falta de control sobre quién puede crear nuevas cuentas.
+- Uso de contraseñas iniciales sin obligación de cambiarlas.
 
 La app resuelve estos problemas centralizando todo el flujo de trabajo en un sistema único.
 
@@ -61,22 +63,57 @@ El funcionamiento está pensado para acompañar el trabajo real de una profesion
 
 Un flujo típico sería:
 
-1. La profesional ingresa al sistema con su usuario.
-2. Carga o consulta sus pacientes.
-3. Define los servicios que ofrece y sus precios.
-4. Crea un turno para una paciente, seleccionando uno o más servicios.
-5. El sistema calcula automáticamente el monto total del turno.
-6. Cuando el turno se realiza, registra la sesión clínica.
-7. Puede agregar fotos de evolución asociadas a esa sesión.
-8. Registra los pagos recibidos, ya sean completos, parciales, señas o trueques.
-9. Si tiene horarios no disponibles, bloquea su agenda para evitar turnos en esos rangos.
-10. Toda la información queda asociada a esa profesional y no se mezcla con la de otras.
+1. El sistema crea una cuenta inicial de administración.
+2. La administradora inicia sesión, cambia su contraseña inicial y queda habilitada para usar el sistema.
+3. Desde el panel de administración crea las cuentas de las profesionales.
+4. Cada profesional ingresa por primera vez con la contraseña inicial asignada.
+5. Antes de usar cualquier módulo, el sistema le exige cambiar esa contraseña por una propia.
+6. Una vez cambiado el password, la profesional carga o consulta sus pacientes.
+7. Define los servicios que ofrece y sus precios.
+8. Crea un turno para una paciente, seleccionando uno o más servicios.
+9. El sistema calcula automáticamente el monto total del turno.
+10. Cuando el turno se realiza, registra la sesión clínica.
+11. Puede agregar fotos de evolución asociadas a esa sesión.
+12. Registra los pagos recibidos, ya sean completos, parciales, señas o trueques.
+13. Si tiene horarios no disponibles, bloquea su agenda para evitar turnos en esos rangos.
+14. Toda la información queda asociada a esa profesional y no se mezcla con la de otras.
 
 ---
 
 ## Módulos principales
 
-### 1. Profesionales
+### 1. Administración, roles y alta de profesionales
+
+La app cuenta con un rol ADMIN para gestionar las cuentas de profesionales.
+
+La cuenta inicial que crea el sistema es:
+
+- Email: admin@estetica.local.
+- Rol: ADMIN.
+- Contraseña inicial: definida por el backend.
+- Debe cambiar su contraseña en el primer ingreso.
+
+Desde el panel de administración se puede:
+
+- Crear profesionales.
+- Listar profesionales.
+- Editar los datos básicos de una profesional.
+- Resetear la contraseña de una profesional.
+- Dar de baja profesionales.
+
+Cuando una administradora crea una profesional, esa cuenta nace con:
+
+- Rol PROFESIONAL.
+- Contraseña inicial hasheada en la base de datos.
+- Obligación de cambiar la contraseña en el primer ingreso.
+
+Si una profesional olvida su contraseña o necesita recuperar el acceso, la administradora puede resetearla desde el panel. La nueva contraseña se guarda hasheada y la profesional queda marcada nuevamente con cambio obligatorio, por lo que deberá elegir una contraseña propia en su próximo ingreso.
+
+No existe registro público abierto. Esto significa que una persona no puede darse de alta sola desde el frontend; las cuentas profesionales se crean desde administración.
+
+---
+
+### 2. Profesionales
 
 Cada profesional tiene su propio perfil dentro del sistema.
 
@@ -94,9 +131,11 @@ Esto permite que el sistema pueda ser usado por una sola profesional o por varia
 
 En términos simples: cada profesional trabaja en su propio espacio privado.
 
+Cada profesional puede consultar y actualizar su propio perfil, pero no puede acceder a las operaciones administrativas si no tiene rol ADMIN.
+
 ---
 
-### 2. Pacientes
+### 3. Pacientes
 
 La app permite registrar y administrar pacientes con sus datos principales.
 
@@ -122,7 +161,7 @@ Esto es importante porque en estética el historial puede seguir siendo útil au
 
 ---
 
-### 3. Servicios
+### 4. Servicios
 
 Cada profesional puede crear su propia lista de servicios.
 
@@ -151,7 +190,7 @@ Esto evita perder información pasada y permite mantener una lista actualizada d
 
 ---
 
-### 4. Turnos
+### 5. Turnos
 
 La app permite crear turnos asociados a una profesional, una paciente y uno o más servicios.
 
@@ -184,7 +223,7 @@ La app también controla que no se creen turnos en fechas pasadas ni en horarios
 
 ---
 
-### 5. Varios servicios en un mismo turno
+### 6. Varios servicios en un mismo turno
 
 Un turno puede incluir uno o varios servicios.
 
@@ -209,7 +248,7 @@ Esto evita confusiones y mantiene un historial económico correcto.
 
 ---
 
-### 6. Historia clínica facial
+### 7. Historia clínica facial
 
 La app permite crear una historia clínica facial para cada paciente.
 
@@ -237,7 +276,7 @@ Esto refleja mejor la realidad del trabajo profesional, donde muchas veces la in
 
 ---
 
-### 7. Historia clínica corporal
+### 8. Historia clínica corporal
 
 Además de la ficha facial, el sistema permite registrar una historia clínica corporal.
 
@@ -266,7 +305,7 @@ Esto ayuda a realizar un seguimiento más completo de tratamientos corporales y 
 
 ---
 
-### 8. Sesiones clínicas
+### 9. Sesiones clínicas
 
 Cuando un turno ya fue realizado, la profesional puede registrar la sesión clínica correspondiente.
 
@@ -290,7 +329,7 @@ La sesión clínica transforma cada turno realizado en una parte del historial d
 
 ---
 
-### 9. Fotos de evolución
+### 10. Fotos de evolución
 
 La app permite vincular fotos de una paciente a una sesión clínica.
 
@@ -311,7 +350,7 @@ El beneficio principal es que las fotos quedan relacionadas con la paciente y co
 
 ---
 
-### 10. Pagos
+### 11. Pagos
 
 La app permite registrar pagos asociados a los turnos.
 
@@ -328,7 +367,7 @@ Cada pago queda asociado a un turno, lo que permite saber cuánto se pagó, cuá
 
 ---
 
-### 11. Pagos parciales, combinados y deuda
+### 12. Pagos parciales, combinados y deuda
 
 Un turno no necesariamente se paga de una sola vez. La app permite registrar varios pagos para un mismo turno.
 
@@ -354,7 +393,7 @@ Esto ayuda a tener un control claro de la parte económica y reduce errores admi
 
 ---
 
-### 12. Trueques
+### 13. Trueques
 
 La app contempla el trueque como forma de pago.
 
@@ -370,7 +409,7 @@ Esto permite que el acuerdo quede documentado dentro del sistema y no dependa so
 
 ---
 
-### 13. Bloqueos de agenda
+### 14. Bloqueos de agenda
 
 La profesional puede bloquear rangos de fecha y hora en los que no está disponible.
 
@@ -396,24 +435,26 @@ La app no maneja cada módulo de forma aislada. Las funciones están conectadas 
 
 El recorrido completo sería:
 
-1. La profesional tiene su perfil y sus datos privados.
-2. Carga una paciente.
-3. Completa sus historias clínicas facial y/o corporal.
-4. Crea sus servicios con precios propios.
-5. Agenda un turno para esa paciente con uno o más servicios.
-6. El sistema calcula el total y guarda el precio de cada servicio en ese momento.
-7. Si el turno se realiza, se registra una sesión clínica.
-8. En esa sesión se describe qué tratamiento se hizo y cómo respondió la paciente.
-9. Se pueden asociar fotos de evolución a la sesión.
-10. Se registran pagos, señas, trueques o pagos parciales.
-11. El sistema calcula automáticamente si queda deuda.
-12. Si la profesional no está disponible en ciertos horarios, bloquea la agenda para evitar errores.
+1. La administradora crea la cuenta de una profesional.
+2. La profesional inicia sesión y cambia su contraseña inicial.
+3. La profesional tiene su perfil y sus datos privados.
+4. Carga una paciente.
+5. Completa sus historias clínicas facial y/o corporal.
+6. Crea sus servicios con precios propios.
+7. Agenda un turno para esa paciente con uno o más servicios.
+8. El sistema calcula el total y guarda el precio de cada servicio en ese momento.
+9. Si el turno se realiza, se registra una sesión clínica.
+10. En esa sesión se describe qué tratamiento se hizo y cómo respondió la paciente.
+11. Se pueden asociar fotos de evolución a la sesión.
+12. Se registran pagos, señas, trueques o pagos parciales.
+13. El sistema calcula automáticamente si queda deuda.
+14. Si la profesional no está disponible en ciertos horarios, bloquea la agenda para evitar errores.
 
 Esta integración permite que toda la información esté relacionada y sea fácil de consultar.
 
 ---
 
-## Seguridad y privacidad de los datos
+## Seguridad, roles y privacidad de los datos
 
 La app está diseñada para que cada profesional vea únicamente su propia información.
 
@@ -424,10 +465,23 @@ Esto significa que:
 - Una profesional no puede acceder a turnos ajenos.
 - Las fichas clínicas quedan protegidas dentro del espacio de cada profesional.
 - Los pagos y fotos también pertenecen a la profesional correspondiente.
+- Las operaciones administrativas solo pueden usarse con rol ADMIN.
+- Las profesionales con rol PROFESIONAL no pueden crear, listar ni dar de baja otras profesionales.
 
 Este modelo es importante para centros donde trabajan varias profesionales y para cualquier negocio que quiera cuidar la privacidad de sus pacientes.
 
 En palabras simples: cada profesional tiene su propio espacio de trabajo y sus datos no se mezclan con los de las demás.
+
+La autenticación funciona con JWT. Al iniciar sesión, el backend devuelve un token que el frontend debe enviar en cada petición protegida usando el header Authorization con formato Bearer.
+
+El login también devuelve:
+
+- debeCambiarPassword: indica si la usuaria debe cambiar la contraseña inicial.
+- rol: indica si la cuenta es ADMIN o PROFESIONAL.
+
+Si una cuenta tiene debeCambiarPassword en true, el backend bloquea el uso de los endpoints protegidos hasta que cambie su contraseña. Solo quedan permitidos el login y el endpoint de cambio de contraseña.
+
+La configuración CORS permite peticiones autenticadas solamente desde http://localhost:5173, que es el origen previsto para el frontend local.
 
 ---
 
@@ -490,7 +544,12 @@ Todo queda guardado y conectado: paciente, ficha clínica, turno, sesión, fotos
 
 Esta versión permite gestionar:
 
-- Profesionales con acceso seguro.
+- Administración de profesionales con rol ADMIN.
+- Creación, listado y baja de profesionales desde administración.
+- Profesionales con acceso seguro mediante JWT.
+- Roles ADMIN y PROFESIONAL.
+- Cambio obligatorio de contraseña inicial.
+- Login que informa token, rol y estado de cambio de password.
 - Pacientes.
 - Servicios.
 - Turnos.
@@ -501,6 +560,7 @@ Esta versión permite gestionar:
 - Pagos, señas, pagos parciales, deudas y trueques.
 - Bloqueos de agenda.
 - Separación segura de información entre profesionales.
+- CORS configurado para el frontend local en http://localhost:5173.
 
 ---
 
@@ -510,6 +570,8 @@ Esta primera versión está enfocada en la gestión interna de la profesional.
 
 Por ahora, no incluye:
 
+- Registro público de profesionales.
+- Creación de cuentas desde una pantalla pública de signup.
 - App para pacientes.
 - Agenda online para que las pacientes saquen turno solas.
 - Recordatorios automáticos por WhatsApp o email.
@@ -527,8 +589,8 @@ Estas funciones pueden agregarse en futuras etapas según las necesidades del ne
 
 Esta app ayuda a profesionales de estética a ordenar y profesionalizar su trabajo diario.
 
-Permite administrar pacientes, fichas clínicas, servicios, turnos, sesiones, fotos, pagos y agenda desde un solo lugar.
+Permite administrar profesionales, pacientes, fichas clínicas, servicios, turnos, sesiones, fotos, pagos y agenda desde un solo lugar.
 
-Su principal valor es que conecta toda la información importante del proceso de atención: desde que una paciente se registra, hasta que realiza un tratamiento, se documenta la sesión, se guardan fotos de evolución y se controla el pago.
+Su principal valor es que conecta toda la información importante del proceso de atención: desde la creación segura de la cuenta profesional, hasta que una paciente se registra, realiza un tratamiento, se documenta la sesión, se guardan fotos de evolución y se controla el pago.
 
 En pocas palabras: es una herramienta para trabajar con más orden, más control y una imagen más profesional frente a las pacientes.
