@@ -645,6 +645,8 @@ interface HistoriaClinicaCorporalRequest {
 - Dashboard admin.
 - Listado de profesionales.
 - Crear profesional.
+- Editar profesional.
+- Resetear contraseña de profesional.
 - Dar de baja profesional.
 
 ### PROFESIONAL
@@ -668,7 +670,7 @@ interface HistoriaClinicaCorporalRequest {
 1. Login con `admin@estetica.local`.
 2. Si `debeCambiarPassword=true`, mostrar pantalla de cambio de contraseña.
 3. Después del cambio, mostrar panel admin.
-4. Desde admin, crear profesionales.
+4. Desde admin, gestionar profesionales: crear, listar, editar, resetear contraseña o dar de baja.
 
 ### Alta de una profesional
 
@@ -683,6 +685,13 @@ interface HistoriaClinicaCorporalRequest {
 2. El backend guarda la contraseña hasheada y marca `debeCambiarPassword=true`.
 3. La profesional puede iniciar sesión con la nueva contraseña.
 4. Al iniciar sesión, el frontend debe enviarla a cambiar contraseña porque `debeCambiarPassword=true`.
+
+### Editar datos de una profesional
+
+1. ADMIN llama `PUT /api/admin/profesionales/{id}` con nombre, apellido, email, teléfono y especialidad.
+2. El backend actualiza solo esos datos básicos.
+3. El endpoint no modifica `rol`, `password` ni `debeCambiarPassword`.
+4. Si el email ya pertenece a otra profesional, el backend responde `400`.
 
 ### Trabajo diario de una profesional
 
@@ -700,6 +709,7 @@ interface HistoriaClinicaCorporalRequest {
 
 - No enviar `rol` al crear profesionales: el backend siempre asigna `PROFESIONAL`.
 - No enviar `rol` ni `password` al editar profesionales con `PUT /api/admin/profesionales/{id}`.
+- Al resetear contraseña, asumir que la profesional deberá cambiarla en el próximo login.
 - No enviar ni mostrar `password` en responses: `ProfesionalResponse` no lo expone.
 - No implementar signup público: no existe endpoint.
 - No dejar que una profesional vea pantallas admin aunque el frontend oculte botones; el backend igualmente responderá 403.

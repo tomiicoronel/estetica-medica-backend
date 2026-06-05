@@ -466,7 +466,7 @@ Esto significa que:
 - Las fichas clínicas quedan protegidas dentro del espacio de cada profesional.
 - Los pagos y fotos también pertenecen a la profesional correspondiente.
 - Las operaciones administrativas solo pueden usarse con rol ADMIN.
-- Las profesionales con rol PROFESIONAL no pueden crear, listar ni dar de baja otras profesionales.
+- Las profesionales con rol PROFESIONAL no pueden crear, listar, editar, resetear contraseñas ni dar de baja otras profesionales.
 
 Este modelo es importante para centros donde trabajan varias profesionales y para cualquier negocio que quiera cuidar la privacidad de sus pacientes.
 
@@ -545,7 +545,7 @@ Todo queda guardado y conectado: paciente, ficha clínica, turno, sesión, fotos
 Esta versión permite gestionar:
 
 - Administración de profesionales con rol ADMIN.
-- Creación, listado y baja de profesionales desde administración.
+- Creación, listado, edición, reseteo de contraseña y baja de profesionales desde administración.
 - Profesionales con acceso seguro mediante JWT.
 - Roles ADMIN y PROFESIONAL.
 - Cambio obligatorio de contraseña inicial.
