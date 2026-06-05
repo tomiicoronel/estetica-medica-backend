@@ -3,6 +3,7 @@ package com.estetica.estetica.exception;
 import com.estetica.estetica.dto.response.ErrorResponse;
 import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -150,6 +151,21 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        // Red de seguridad: si un dato inválido escapa a las validaciones del DTO y viola
+        // una restricción de la base (largo, unicidad, etc.), devolvemos 409 con un mensaje
+        // claro en lugar de un 500 genérico.
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(409)
+                .error("Conflicto de datos")
+                .mensaje("Los datos enviados violan una restricción de la base de datos (por ejemplo, un valor duplicado o un campo demasiado largo).")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(Exception.class)

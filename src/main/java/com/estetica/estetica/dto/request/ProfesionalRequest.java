@@ -3,6 +3,7 @@ package com.estetica.estetica.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 @Getter
@@ -32,6 +33,7 @@ public class ProfesionalRequest {
     @Schema(description = "Teléfono de contacto", example = "1155443322", maxLength = 20, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El teléfono es obligatorio")
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
+    @Pattern(regexp = "^[0-9+()\\-\\s]+$", message = "El teléfono solo puede contener números, espacios y los signos + - ( )")
     private String telefono;
 
     @Schema(description = "Especialidad de la profesional", example = "Dermatología estética", maxLength = 100)

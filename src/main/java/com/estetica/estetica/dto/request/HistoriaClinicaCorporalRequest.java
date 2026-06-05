@@ -2,6 +2,7 @@ package com.estetica.estetica.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -39,7 +40,9 @@ public class HistoriaClinicaCorporalRequest {
     @Schema(description = "Otras alergias") private String otrasAlergias;
 
     @Schema(description = "Antecedentes quirúrgicos") private String antecedentesQuirurgicos;
-    @Schema(description = "Fecha de última menstruación o dato ginecológico textual") private String fum;
+    @Schema(description = "Fecha de última menstruación o dato ginecológico textual")
+    @Size(max = 255, message = "El campo FUM no puede superar los 255 caracteres")
+    private String fum;
     @Schema(description = "Embarazo actual") private Boolean embarazo;
     @Schema(description = "Lactancia actual") private Boolean lactancia;
 

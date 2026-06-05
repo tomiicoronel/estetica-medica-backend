@@ -3,6 +3,7 @@ package com.estetica.estetica.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -37,7 +38,9 @@ public class HistoriaClinicaFacialRequest {
     @Schema(description = "Otras alergias") private String otrasAlergias;
 
     @Schema(description = "Antecedentes quirúrgicos") private String antecedentesQuirurgicos;
-    @Schema(description = "Fecha de última menstruación o dato ginecológico textual") private String fum;
+    @Schema(description = "Fecha de última menstruación o dato ginecológico textual")
+    @Size(max = 255, message = "El campo FUM no puede superar los 255 caracteres")
+    private String fum;
     @Schema(description = "Embarazo actual") private Boolean embarazo;
 
     @Schema(description = "Herpes labial") private Boolean herpesLabial;
@@ -46,8 +49,12 @@ public class HistoriaClinicaFacialRequest {
 
     @Schema(description = "Exposición solar frecuente") private Boolean exposicionSolar;
     @Schema(description = "Usa protección solar") private Boolean usaProteccionSolar;
-    @Schema(description = "Tipo o marca de protección solar") private String proteccionSolarCual;
-    @Schema(description = "Veces por día que usa protección solar") private String proteccionSolarVecesDia;
+    @Schema(description = "Tipo o marca de protección solar")
+    @Size(max = 255, message = "El detalle de protección solar no puede superar los 255 caracteres")
+    private String proteccionSolarCual;
+    @Schema(description = "Veces por día que usa protección solar")
+    @Size(max = 255, message = "La frecuencia de protección solar no puede superar los 255 caracteres")
+    private String proteccionSolarVecesDia;
     @Schema(description = "Hábitos de higiene facial") private String habitosHigieneFacial;
     @Schema(description = "Tratamiento domiciliario actual") private String tratamientoDomiciliario;
     @Schema(description = "Tuvo tratamientos faciales previos") private Boolean tratamientosPrevios;

@@ -3,6 +3,7 @@ package com.estetica.estetica.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -33,6 +34,7 @@ public class PacienteRequest {
     @Schema(description = "DNI o CUIT. No puede repetirse dentro de la misma profesional.", example = "30111222", maxLength = 20, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El DNI/CUIT es obligatorio")
     @Size(max = 20, message = "El DNI/CUIT no puede superar los 20 caracteres")
+    @Pattern(regexp = "^[0-9.\\-]+$", message = "El DNI/CUIT solo puede contener números, puntos o guiones")
     private String dniCuit;
 
     @Schema(description = "Fecha de nacimiento", example = "1990-05-20")
@@ -41,6 +43,7 @@ public class PacienteRequest {
     @Schema(description = "Teléfono de contacto", example = "1122334455", maxLength = 20, requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "El teléfono es obligatorio")
     @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
+    @Pattern(regexp = "^[0-9+()\\-\\s]+$", message = "El teléfono solo puede contener números, espacios y los signos + - ( )")
     private String telefono;
 
     @Schema(description = "Email del paciente. Opcional, pero si se envía debe ser válido.", example = "ana@email.com", maxLength = 150)
@@ -70,6 +73,7 @@ public class PacienteRequest {
 
     @Schema(description = "Teléfono del contacto de emergencia", example = "1199887766", maxLength = 20)
     @Size(max = 20, message = "El teléfono del contacto de emergencia no puede superar los 20 caracteres")
+    @Pattern(regexp = "^[0-9+()\\-\\s]*$", message = "El teléfono del contacto de emergencia solo puede contener números, espacios y los signos + - ( )")
     private String contactoEmergenciaTelefono;
 
     @Schema(description = "Parentesco del contacto de emergencia", example = "Hermana", maxLength = 50)
