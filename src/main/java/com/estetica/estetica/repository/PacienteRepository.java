@@ -19,6 +19,8 @@ public interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
     List<Paciente> findByProfesionalIdAndActivo(UUID profesionalId, Boolean activo);
 
+    long countByProfesionalIdAndActivo(UUID profesionalId, Boolean activo);
+
     @Modifying
     @Query("UPDATE Paciente p SET p.activo = :activo, p.actualizadoEn = CURRENT_TIMESTAMP WHERE p.id = :id")
     int cambiarEstado(@Param("id") UUID id, @Param("activo") Boolean activo);

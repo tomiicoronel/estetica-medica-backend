@@ -217,11 +217,24 @@ No hay delete físico de servicios. Se activan/desactivan.
 | GET | `/api/turnos` | - | `TurnoResponse[]` | Autenticado |
 | GET | `/api/turnos?estado=PENDIENTE` | - | `TurnoResponse[]` | Autenticado |
 | GET | `/api/turnos?desde=2026-06-01T00:00:00&hasta=2026-06-30T23:59:59` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/turnos/proximos` | - | `TurnoResponse[]` | Autenticado |
+| GET | `/api/turnos/proximos?fecha=2026-06-05` | - | `TurnoResponse[]` | Autenticado |
 | GET | `/api/pacientes/{pacienteId}/turnos` | - | `TurnoResponse[]` | Autenticado |
 | GET | `/api/turnos/{id}` | - | `TurnoResponse` | Autenticado |
 | PATCH | `/api/turnos/{id}/estado?nuevoEstado=REALIZADO` | - | `TurnoResponse` | Autenticado |
 
 Estados válidos: `PENDIENTE`, `CONFIRMADO`, `REALIZADO`, `CANCELADO`.
+
+`GET /api/turnos/proximos` devuelve **todos** los turnos de un día (sin límite de cantidad). Con `fecha` devuelve los turnos de esa fecha; sin `fecha` devuelve los turnos del próximo día (a partir de hoy) que tenga turnos, o `[]` si no hay turnos futuros. Ideal para el panel de "próximos turnos" del dashboard.
+
+### Dashboard
+
+| Método | Path | Body | Respuesta | Acceso |
+|---|---|---|---|---|
+| GET | `/api/dashboard` | - | `DashboardResponse` | Autenticado |
+| GET | `/api/dashboard?fecha=2026-06-05` | - | `DashboardResponse` | Autenticado |
+
+Devuelve las métricas de la profesional autenticada para la fecha indicada (por defecto hoy): turnos del día, turnos realizados del día, total de pacientes activos (no depende de la fecha) y total recaudado del día. Respeta el aislamiento por profesional.
 
 ### Historia clínica facial
 
@@ -267,9 +280,13 @@ Importante: en esta versión no se sube un archivo binario real. El backend gene
 | GET | `/api/turnos/{turnoId}/pagos` | - | `PagoResponse[]` | Autenticado |
 | GET | `/api/turnos/{turnoId}/pagos/resumen` | - | `ResumenPagoResponse` | Autenticado |
 | GET | `/api/pagos` | - | `PagoResponse[]` | Autenticado |
+| GET | `/api/pagos/resumen-diario` | - | `ResumenDiarioPagoResponse` | Autenticado |
+| GET | `/api/pagos/resumen-diario?fecha=2026-06-05` | - | `ResumenDiarioPagoResponse` | Autenticado |
 | DELETE | `/api/pagos/{id}` | - | 204 | Autenticado |
 
 Métodos de pago válidos: `EFECTIVO`, `TRANSFERENCIA`, `MERCADO_PAGO`, `TRUEQUE`.
+
+`GET /api/pagos/resumen-diario` devuelve el total recaudado de la profesional autenticada en la fecha indicada (por defecto hoy) más el detalle de los pagos de ese día. `GET /api/pagos` sigue devolviendo todos los pagos históricos para reportes generales.
 
 ### Bloqueos de agenda
 
@@ -480,6 +497,21 @@ interface ResumenPagoResponse {
   deuda: number;
   tieneDeuda: boolean;
   pagos: PagoResponse[];
+}
+
+interface ResumenDiarioPagoResponse {
+  fecha: string;          // yyyy-MM-dd
+  totalRecaudado: number;
+  cantidadPagos: number;
+  pagos: PagoResponse[];
+}
+
+interface DashboardResponse {
+  fecha: string;                    // yyyy-MM-dd
+  cantidadTurnos: number;
+  cantidadTurnosRealizados: number;
+  pacientesActivos: number;         // total, no depende de la fecha
+  totalRecaudado: number;
 }
 
 interface BloqueoAgendaRequest {
@@ -695,15 +727,17 @@ interface HistoriaClinicaCorporalRequest {
 
 ### Trabajo diario de una profesional
 
-1. Crear paciente.
-2. Crear servicios activos.
-3. Crear turno con `pacienteId`, `fechaHora` y `servicioIds`.
-4. Cambiar estado del turno según avance.
-5. Si el turno se realiza, crear sesión clínica.
-6. Asociar fotos a la sesión si corresponde.
-7. Registrar pagos.
-8. Consultar resumen de pagos para deuda.
-9. Crear bloqueos de agenda para horarios no disponibles.
+1. Al entrar, cargar el dashboard del día con `GET /api/dashboard` (turnos del día, realizados, pacientes activos y recaudado del día).
+2. Mostrar los próximos turnos con `GET /api/turnos/proximos` (todos los del próximo día con turnos; o de una fecha con `?fecha=`).
+3. Crear paciente.
+4. Crear servicios activos.
+5. Crear turno con `pacienteId`, `fechaHora` y `servicioIds`.
+6. Cambiar estado del turno según avance.
+7. Si el turno se realiza, crear sesión clínica.
+8. Asociar fotos a la sesión si corresponde.
+9. Registrar pagos.
+10. Consultar resumen de pagos para deuda y `GET /api/pagos/resumen-diario` para el total recaudado del día.
+11. Crear bloqueos de agenda para horarios no disponibles.
 
 ## Detalles importantes para evitar errores
 
@@ -717,6 +751,9 @@ interface HistoriaClinicaCorporalRequest {
 - En `PacienteRequest`, `profesionalId` es legacy e ignorado.
 - En fotos, `sesionClinicaId` del body debe coincidir con `{sesionId}` del path.
 - En turnos, `servicioIds` no puede estar vacío.
+- Para el dashboard usar `GET /api/dashboard?fecha=` y `GET /api/pagos/resumen-diario?fecha=`: calculan por día y no mezclan totales históricos con datos del día. El total histórico sigue disponible en `GET /api/pagos`.
+- Para "próximos turnos" usar `GET /api/turnos/proximos`: trae todos los turnos del día consultado, sin límite fijo de 5.
+- Las fechas de `?fecha=` van en formato `yyyy-MM-dd`; `pacientesActivos` del dashboard es un total y no depende de la fecha.
 - En pagos, si `metodo` es `TRUEQUE`, usar `detalleTrueque`.
 - Los recursos de otra profesional devuelven 404 para no revelar que existen.
 - Si el frontend necesita documentación viva, usar Swagger en `http://localhost:8080/swagger-ui.html`.

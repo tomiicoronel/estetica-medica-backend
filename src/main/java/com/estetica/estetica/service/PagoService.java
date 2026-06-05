@@ -2,6 +2,7 @@ package com.estetica.estetica.service;
 
 import com.estetica.estetica.dto.request.PagoRequest;
 import com.estetica.estetica.dto.response.PagoResponse;
+import com.estetica.estetica.dto.response.ResumenDiarioPagoResponse;
 import com.estetica.estetica.dto.response.ResumenPagoResponse;
 import com.estetica.estetica.exception.AccesoNoAutorizadoException;
 import com.estetica.estetica.model.EstadoTurno;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -96,6 +98,29 @@ public class PagoService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ResumenDiarioPagoResponse obtenerResumenDiario(LocalDate fecha) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+        LocalDate dia = fecha != null ? fecha : LocalDate.now();
+        LocalDateTime desde = dia.atStartOfDay();
+        LocalDateTime hasta = dia.plusDays(1).atStartOfDay();
+
+        List<PagoResponse> pagos = pagoRepository
+                .findByTurno_Profesional_IdAndFechaGreaterThanEqualAndFechaLessThanOrderByFechaAsc(profesionalId, desde, hasta)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        BigDecimal totalRecaudado = pagoRepository.sumMontoByProfesionalIdAndFechaRango(profesionalId, desde, hasta);
+
+        return ResumenDiarioPagoResponse.builder()
+                .fecha(dia)
+                .totalRecaudado(totalRecaudado != null ? totalRecaudado : BigDecimal.ZERO)
+                .cantidadPagos(pagos.size())
+                .pagos(pagos)
+                .build();
     }
 
     @Transactional

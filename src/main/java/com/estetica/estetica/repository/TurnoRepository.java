@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,6 +20,18 @@ public interface TurnoRepository extends JpaRepository<Turno, UUID> {
     List<Turno> findByPacienteId(UUID pacienteId);
 
     List<Turno> findByProfesionalIdAndFechaHoraBetween(UUID profesionalId, LocalDateTime desde, LocalDateTime hasta);
+
+    List<Turno> findByProfesionalIdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanOrderByFechaHoraAsc(
+            UUID profesionalId, LocalDateTime desde, LocalDateTime hasta);
+
+    Optional<Turno> findFirstByProfesionalIdAndFechaHoraGreaterThanEqualOrderByFechaHoraAsc(
+            UUID profesionalId, LocalDateTime desde);
+
+    long countByProfesionalIdAndFechaHoraGreaterThanEqualAndFechaHoraLessThan(
+            UUID profesionalId, LocalDateTime desde, LocalDateTime hasta);
+
+    long countByProfesionalIdAndEstadoAndFechaHoraGreaterThanEqualAndFechaHoraLessThan(
+            UUID profesionalId, EstadoTurno estado, LocalDateTime desde, LocalDateTime hasta);
 
     long countByProfesionalIdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanAndEstadoNot(
             UUID profesionalId,

@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +71,21 @@ public class TurnoController {
             return ResponseEntity.ok(turnoService.listarPorProfesionalYRango(desde, hasta));
         }
         return ResponseEntity.ok(turnoService.listarPorProfesional());
+    }
+
+    @GetMapping("/api/turnos/proximos")
+    @Operation(summary = "Próximos turnos del día", description = "Devuelve todos los turnos de un día específico de la profesional autenticada, sin límite de cantidad. Si se indica 'fecha', devuelve los turnos de esa fecha; si se omite, devuelve los turnos del próximo día (a partir de hoy) que tenga turnos. Útil para alimentar el panel de 'próximos turnos' del dashboard.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente"),
+            @ApiResponse(responseCode = "400", description = "Fecha con formato inválido",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Profesional autenticada no encontrada",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<List<TurnoResponse>> listarProximos(
+            @Parameter(description = "Fecha a consultar en formato ISO-8601 (yyyy-MM-dd). Si se omite, se usa el próximo día con turnos.", example = "2026-06-05")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        return ResponseEntity.ok(turnoService.listarProximos(fecha));
     }
 
     @GetMapping("/api/pacientes/{pacienteId}/turnos")

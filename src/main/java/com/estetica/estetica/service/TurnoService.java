@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,6 +152,32 @@ public class TurnoService {
             throw new IllegalArgumentException("La fecha 'hasta' no puede ser anterior a 'desde'");
         }
         return turnoRepository.findByProfesionalIdAndFechaHoraBetween(profesionalId, desde, hasta)
+                .stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TurnoResponse> listarProximos(LocalDate fecha) {
+        UUID profesionalId = profesionalAutenticadaService.obtenerIdProfesionalAutenticada();
+
+        // Si no se indica fecha, se busca el próximo día (a partir de hoy) que tenga al menos
+        // un turno y se devuelven todos los turnos de ese día. Si se indica, se devuelven
+        // todos los turnos de esa fecha. En ambos casos sin límite fijo de cantidad.
+        LocalDate dia = fecha;
+        if (dia == null) {
+            LocalDateTime hoy = LocalDate.now().atStartOfDay();
+            dia = turnoRepository
+                    .findFirstByProfesionalIdAndFechaHoraGreaterThanEqualOrderByFechaHoraAsc(profesionalId, hoy)
+                    .map(turno -> turno.getFechaHora().toLocalDate())
+                    .orElse(null);
+            if (dia == null) {
+                return List.of();
+            }
+        }
+
+        LocalDateTime desde = dia.atStartOfDay();
+        LocalDateTime hasta = dia.plusDays(1).atStartOfDay();
+        return turnoRepository
+                .findByProfesionalIdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanOrderByFechaHoraAsc(profesionalId, desde, hasta)
                 .stream().map(this::toResponse).toList();
     }
 

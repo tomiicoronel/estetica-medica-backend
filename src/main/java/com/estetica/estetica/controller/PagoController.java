@@ -3,6 +3,7 @@ package com.estetica.estetica.controller;
 import com.estetica.estetica.dto.request.PagoRequest;
 import com.estetica.estetica.dto.response.ErrorResponse;
 import com.estetica.estetica.dto.response.PagoResponse;
+import com.estetica.estetica.dto.response.ResumenDiarioPagoResponse;
 import com.estetica.estetica.dto.response.ResumenPagoResponse;
 import com.estetica.estetica.dto.response.ValidationErrorResponse;
 import com.estetica.estetica.service.PagoService;
@@ -15,10 +16,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,6 +84,19 @@ public class PagoController {
     })
     public ResponseEntity<List<PagoResponse>> listarPorProfesional() {
         return ResponseEntity.ok(pagoService.listarPorProfesional());
+    }
+
+    @GetMapping("/api/pagos/resumen-diario")
+    @Operation(summary = "Resumen de pagos por día", description = "Devuelve el total recaudado por la profesional autenticada en la fecha indicada (por defecto hoy) junto con el detalle de los pagos de ese día. Respeta el aislamiento por profesional.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Resumen diario obtenido correctamente"),
+            @ApiResponse(responseCode = "400", description = "Fecha con formato inválido",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<ResumenDiarioPagoResponse> obtenerResumenDiario(
+            @Parameter(description = "Fecha a consultar en formato ISO-8601 (yyyy-MM-dd). Si se omite, se usa la fecha de hoy.", example = "2026-06-05")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+        return ResponseEntity.ok(pagoService.obtenerResumenDiario(fecha));
     }
 
     @DeleteMapping("/api/pagos/{id}")

@@ -429,6 +429,25 @@ Esto ayuda a evitar superposiciones y errores en la agenda.
 
 ---
 
+### 15. Resumen del día y recaudación diaria (dashboard)
+
+Para el trabajo cotidiano, la app ofrece un resumen del día pensado para el panel principal de la profesional.
+
+Dada una fecha (por defecto, el día de hoy), la profesional puede ver de un vistazo:
+
+- Cuántos turnos tiene ese día.
+- Cuántos de esos turnos ya fueron realizados.
+- Cuántos pacientes activos tiene en total (este dato no depende de la fecha).
+- Cuánto recaudó ese día.
+
+Además, la recaudación se puede consultar por día: la app devuelve el total recaudado de una fecha junto con el detalle de los pagos de ese día. Así se separa la mirada diaria del total histórico, que sigue estando disponible para reportes generales.
+
+El panel de "próximos turnos" también funciona por día: en lugar de un número fijo de turnos, trae todos los turnos de la fecha consultada o, si no se indica fecha, todos los del próximo día que tenga turnos agendados.
+
+Todo esto respeta la separación por profesional: cada una ve únicamente sus propios turnos, pacientes y pagos.
+
+---
+
 ## Cómo se integran las funciones entre sí
 
 La app no maneja cada módulo de forma aislada. Las funciones están conectadas para acompañar el flujo real de atención.
@@ -558,6 +577,9 @@ Esta versión permite gestionar:
 - Sesiones clínicas.
 - Fotos de pacientes asociadas a sesiones.
 - Pagos, señas, pagos parciales, deudas y trueques.
+- Recaudación por día y total histórico de pagos.
+- Resumen del día (dashboard): turnos del día, turnos realizados, pacientes activos y recaudado del día.
+- Próximos turnos por día, sin límite fijo de cantidad.
 - Bloqueos de agenda.
 - Separación segura de información entre profesionales.
 - CORS configurado para el frontend local en http://localhost:5173.
